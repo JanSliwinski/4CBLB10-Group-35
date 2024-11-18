@@ -1,0 +1,8 @@
+# Exclude files
+
+*.asv
+
+# Ignore compiled source and log files
+slprj/
+*.log
+slprj/
