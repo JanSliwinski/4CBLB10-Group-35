@@ -1,12 +1,11 @@
 %% Info
-% Toerental: 1500 RPM
+% Speed: 1500 RPM
 % SOA van 4.2º voor TDC
-% Resolutie van 0.2º CA
-% Data voor 69 cycles (maximale van de Smetec, de OGO gensets kunnen in principe “onbeperkt” aan)
+% Resolution of 0.2º CA
+% Data for 69 cycles (maximum of the Smetec, the OGO gensets can in principle handle “unlimitedly”)
 % 
 %% init
 clear all; clc;close all;
-addpath( "Functions","Nasa");
 %% Units
 mm      = 1e-3;dm=0.1;
 bara    = 1e5;
@@ -50,7 +49,7 @@ set(f1,'Position',[ 200 800 1200 400]);             % Just a size I like. Your c
 pp = plot(Ca,p/bara,'LineWidth',1);                 % Plots the whole matrix
 xlabel('Ca');ylabel('p [bar]');                     % Always add axis labels
 xlim([-360 360]);ylim([0 50]);                      % Matter of taste
-iselect = 10;                                    % Plot cycle 10 again in the same plot to emphasize it. Just to show how to access individual cycles.
+iselect = 69;                                       % Plot cycle 10 again in the same plot to emphasize it. Just to show how to access individual cycles.
 line(Ca(:,iselect),p(:,iselect)/bara,'LineWidth',2,'Color','r');
 YLIM = ylim;
 % Add some extras to the plot
