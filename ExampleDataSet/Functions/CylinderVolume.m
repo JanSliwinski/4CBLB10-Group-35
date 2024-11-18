@@ -1,29 +1,25 @@
-function [V] = CylinderVolume(Ca,Cyl)
-% This function provides the cylinder volume as function of 
-% Ca : Crankangle [degrees]
-% Cyl :  a struct containing
-%   Cyl.S : Stroke
-%   Cyl.B                   : Bore
-%   Cyl.ConRod              : Connecting Rod length
-%   Cyl.CompressionRatio    : Compession Ratio
-%   Cyl.TDCangle            : Angle associated with the Top Dead Center
-%----------------------------------------------------------------------
-fprintf('WARNING------------------------------------------------------------------\n');
-fprintf(' Modify this function to yours. Now it is just a sinusoidal expression\n');
-fprintf(' This function is %s\n',mfilename('fullpath'));
-fprintf('END OF WARNING ----------------------------------------------------------\n');
-B   = Cyl.Bore;
-S   = Cyl.Stroke;
-cr  = Cyl.CompressionRatio;
-r   = S/2;
-l   = Cyl.ConRod;
-%-------------------------------------------------------------------------------------------------------
-CAl     = Ca-Cyl.TDCangle;
-Vd      = pi*(B/2)^2*S;
-Vc      = Vd/(cr-1);
-V       = Vc + Vd*(sind(CAl+90)+1)/2; % 'sind' is the sine function taking arguments in degrees instead of radians
-
-
-
-
-
+function [V] = CylinderVolume(Ca, Cyl)
+    % Inputs:
+    %   Ca  : Crank angle [degrees]
+    %   Cyl : Struct with engine geometry
+    % Outputs:
+    %   V   : Cylinder volume [m^3]
+    
+    % Extract parameters from the struct
+    B = Cyl.Bore;               % Bore [m]
+    S = Cyl.Stroke;             % Stroke [m]
+    r = S / 2;                  % Crank radius [m]
+    l = Cyl.ConRod;             % Connecting rod length [m]
+    cr = Cyl.CompressionRatio;  % Compression ratio
+    A = pi / 4 * B^2;           % Cross-sectional area [m^2]
+    
+    % Volumes
+    Vd = A * S;                 % Displacement volume [m^3]
+    Vc = Vd / (cr - 1);         % Clearance volume [m^3]
+    
+    % Adjust crank angle to be relative to TDC
+    CAl = Ca;
+    
+    % Calculate cylinder volume as a function of crank angle
+    V = Vc + A * (r * (1 - cosd(CAl)) + l - sqrt(l^2 - (r * sind(CAl)).^2));
+end

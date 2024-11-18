@@ -1,77 +1,147 @@
-%% Info
-% Toerental: 1500 RPM
-% SOA van 4.2º voor TDC
-% Resolutie van 0.2º CA
-% Data voor 69 cycles (maximale van de Smetec, de OGO gensets kunnen in principe “onbeperkt” aan)
-% 
-%% init
-clear all; clc;close all;
-addpath( "Functions","Nasa");
-%% Units
-mm      = 1e-3;dm=0.1;
-bara    = 1e5;
-MJ      = 1e6;
-kWhr    = 1000*3600;
-volperc = 0.01; % Emissions are in volume percentages
-ppm     = 1e-6; % Some are in ppm (also a volume- not a mass-fraction)
-g       = 1e-3;
-s       = 1;
-%% Load NASA maybe you need it at some point?
-% Global (for the Nasa database in case you wish to use it).
+%% Initialization
+clear; clc; close all;
+addpath("Functions", "Nasa");  % Add necessary paths
+
+%% Units and Constants
+mm = 1e-3;
+dm = 0.1;
+bara = 1e5;
+MJ = 1e6;
+kWhr = 1000 * 3600;
+volperc = 0.01;  % Emissions are in volume percentages
+ppm = 1e-6;      % Some are in ppm (also a volume fraction)
+g = 1e-3;
+s = 1;
+
+%% Load NASA Data (if needed)
 global Runiv
 Runiv = 8.314;
-[SpS,El]        = myload('Nasa\NasaThermalDatabase.mat',{'Diesel','O2','N2','CO2','H2O'});
-%% Engine geom data (check if these are correct)
-Cyl.Bore                = 104*mm;
-Cyl.Stroke              = 85*mm;
-Cyl.CompressionRatio    = 21.5;
-Cyl.ConRod              = 136.5*mm;
-Cyl.TDCangle            = 180;
-% -- Valve closing events can sometimes be seen in fast oscillations in the pressure signal (due
-% to the impact when the Valve hits its seat).
-CaIVO = -355;
-CaIVC = -135;
-CaEVO = 149;
-CaEVC = -344;
-CaSOI = -3.2;
-% Write a function [V] = CylinderVolume(Ca,Cyl) that will give you Volume
-% for the given Cyl geometry. If you can do that you can create pV-diagrams
-%% Load data (if txt file)
-FullName        = fullfile('Data','ExampleDataSet.txt');
-dataIn          = table2array(readtable(FullName));
-[Nrows,Ncols]   = size(dataIn);                    % Determine size of array
-NdatapointsperCycle = 720/0.2;                     % Nrows is a multitude of NdatapointsperCycle
-Ncycles         = Nrows/NdatapointsperCycle;       % This must be an integer. If not checkwhat is going on
-Ca              = reshape(dataIn(:,1),[],Ncycles); % Both p and Ca are now matrices of size (NCa,Ncycles)
-p               = reshape(dataIn(:,2),[],Ncycles)*bara; % type 'help reshape' in the command window if you want to know what it does (reshape is a Matlab buit-in command
-%% Plotting 
-f1=figure(1);
-set(f1,'Position',[ 200 800 1200 400]);             % Just a size I like. Your choice
-pp = plot(Ca,p/bara,'LineWidth',1);                 % Plots the whole matrix
-xlabel('Ca');ylabel('p [bar]');                     % Always add axis labels
-xlim([-360 360]);ylim([0 50]);                      % Matter of taste
-iselect = 10;                                    % Plot cycle 10 again in the same plot to emphasize it. Just to show how to access individual cycles.
-line(Ca(:,iselect),p(:,iselect)/bara,'LineWidth',2,'Color','r');
+
+[SpS, El] = myload('Nasa/NasaThermalDatabase.mat', {'Diesel', 'O2', 'N2', 'CO2', 'H2O'});
+
+%% Engine Geometry Data
+Cyl.Bore = 104 * mm;
+Cyl.Stroke = 85 * mm;
+Cyl.CompressionRatio = 21.5;
+Cyl.ConRod = 136.5 * mm;
+Cyl.TDCangle = 180;
+
+%% Valve Events (Crank Angles)
+ValveEvents.CaIVO = -355;
+ValveEvents.CaIVC = -135;
+ValveEvents.CaEVO = 149;
+ValveEvents.CaEVC = -344;
+ValveEvents.CaSOI = -3.2;  % Start of Injection
+
+%% Load and Reshape Data
+dataFileName = fullfile('Data', 'ExampleDataSet.txt');
+dataIn = table2array(readtable(dataFileName));
+
+[Nrows, ~] = size(dataIn);
+resolution = 0.2;  % Degrees crank angle resolution
+NdatapointsPerCycle = 720 / resolution;
+Ncycles = Nrows / NdatapointsPerCycle;
+
+if mod(Nrows, NdatapointsPerCycle) ~= 0
+    error('Number of data points is not an integer multiple of data points per cycle.');
+end
+
+% Reshape data into cycles
+Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
+p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
+
+%% Plot Pressure vs. Crank Angle for All Cycles
+figure;
+set(gcf, 'Position', [200, 800, 1200, 400]);
+
+plot(Ca, p / bara, 'LineWidth', 1);
+xlabel('Crank Angle (°)');
+ylabel('Pressure (bar)');
+xlim([-360, 360]);
+ylim([0, 50]);
+title('Pressure vs. Crank Angle for All Cycles');
+grid on;
+
+% Highlight a specific cycle
+iselect = 10;
+hold on;
+plot(Ca(:, iselect), p(:, iselect) / bara, 'r', 'LineWidth', 2);
+
+% Plot valve events
 YLIM = ylim;
-% Add some extras to the plot
-line([CaIVC CaIVC],YLIM,'LineWidth',1,'Color','b'); % Plot a vertical line at IVC. Just for reference not a particular reason.
-line([CaEVO CaEVO],YLIM,'LineWidth',1,'Color','r'); % Plot a vertical line at EVO. Just for reference not a particular reason.
-set(gca,'XTick',[-360:60:360],'XGrid','on','YGrid','on');        % I like specific axis labels. Matter of taste
-title('All cycles in one plot.')
-%% pV-diagram
-V = CylinderVolume(Ca(:,iselect),Cyl);
-f2 = figure(2);
-set(f2,'Position',[ 200 400 600 800]);              % Just a size I like. Your choice
-subplot(2,1,1)
-plot(V/dm^3,p(:,iselect)/bara);
-xlabel('V [dm^3]');ylabel('p [bar]');               % Always add axis labels
-xlim([0 0.8]);ylim([0.5 50]);                      % Matter of taste
-set(gca,'XTick',[0:0.1:0.8],'XGrid','on','YGrid','on');        % I like specific axis labels. Matter of taste
-title({'pV-diagram','(with wrong Volume function btw)'})
-subplot(2,1,2)
-loglog(V/dm^3,p(:,iselect)/bara);
-xlabel('V [dm^3]');ylabel('p [bar]');               % Always add axis labels
-xlim([0.02 0.8]);ylim([0 50]);                      % Matter of taste
-set(gca,'XTick',[0.02 0.05 0.1 0.2 0.5 0.8],...
-    'YTick',[0.5 1 2 5 10 20 50],'XGrid','on','YGrid','on');        % I like specific axis labels. Matter of taste
-title({'pV-diagram','(with wrong Volume function btw)'})
+line([ValveEvents.CaIVC, ValveEvents.CaIVC], YLIM, 'Color', 'b', 'LineWidth', 1);
+line([ValveEvents.CaEVO, ValveEvents.CaEVO], YLIM, 'Color', 'r', 'LineWidth', 1);
+
+set(gca, 'XTick', -360:60:360);
+grid on;
+
+%% Calculate Cylinder Volume for All Cycles
+V_all = zeros(size(Ca));  % Initialize volume matrix
+for i = 1:Ncycles
+    V_all(:, i) = CylinderVolume(Ca(:, i), Cyl);
+end
+
+%% Filter Pressure Data
+polynomialOrder = 3;
+frameLength = 21;  % Must be odd
+
+p_filtered =  SGFilter(,3,21,0);
+
+%% Calculate Average Volume and Pressure
+V_avg = mean(V_all, 2);         % Average volume across all cycles
+p_avg = mean(p, 2);             % Average pressure across all cycles
+p_filtered_avg = mean(p_filtered, 2);
+
+%% Calculate Work
+W = trapz(V_avg, p_avg);
+disp(['Calculated work: ', num2str(W), ' J']);
+
+%% Plot pV Diagrams
+figure;
+tl = tiledlayout(2, 2);
+
+% Subplot 1: Linear pV Diagram (Average)
+nexttile;
+plot(V_avg / dm^3, p_avg / bara);
+xlabel('Volume [dm³]');
+ylabel('Pressure [bar]');
+title('Average pV Diagram (Linear Scale)');
+grid on;
+
+% Subplot 2: Logarithmic pV Diagram (Average)
+nexttile;
+loglog(V_avg / dm^3, p_avg / bara);
+xlabel('Volume [dm³]');
+ylabel('Pressure [bar]');
+title('Average pV Diagram (Logarithmic Scale)');
+grid on;
+
+% Subplot 3: Single Cycle pV Diagram
+nexttile;
+plot(V_all(:, iselect) / dm^3, p(:, iselect) / bara);
+xlabel('Volume [dm³]');
+ylabel('Pressure [bar]');
+title(['pV Diagram (Cycle ', num2str(iselect), ')']);
+grid on;
+
+% Subplot 4: Filtered Average pV Diagram
+nexttile;
+loglog(V_avg / dm^3, p_filtered_avg / bara);
+xlabel('Volume [dm³]');
+ylabel('Pressure [bar]');
+title('Filtered Average pV Diagram (Logarithmic Scale)');
+grid on;
+
+sgtitle('pV Diagrams');
+
+%% Compare Raw and Filtered Pressure Data for a Single Cycle
+figure;
+hold on;
+plot(Ca(:, iselect), p(:, iselect) / bara, 'DisplayName', 'Raw Data');
+plot(Ca(:, iselect), p_filtered(:, iselect) / bara, 'DisplayName', 'Filtered Data');
+xlabel('Crank Angle (°)');
+ylabel('Pressure [bar]');
+title(['Comparison of Raw and Filtered Pressure Data (Cycle ', num2str(iselect), ')']);
+legend('show');
+grid on;
+hold off;
