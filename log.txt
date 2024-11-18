@@ -1,0 +1,7 @@
+Hi all future users!
+
+18.11.2024 is the birthday of this repository. The goal for today is to
+familirise ourselves with all data, scripts and resources provided and
+to already begin some work! Firs tho, I will setup a "struct" to contain
+data for all fuels we will be using, such that while mixing all info on
+constituents are readily available. Fun!
