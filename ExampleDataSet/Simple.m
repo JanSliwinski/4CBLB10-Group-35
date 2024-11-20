@@ -85,7 +85,13 @@ end
 polynomialOrder = 3;
 frameLength = 21;  % Must be odd
 
-p_filtered =  SGFilter(,3,21,0);
+% Initialize the filtered pressure matrix
+p_filtered = zeros(size(p));
+
+% Apply the filter to each column
+for i = 1:Ncycles
+    p_filtered(:, i) = SGFilter(p(:, i), polynomialOrder, frameLength, 0);
+end
 
 %% Calculate Average Volume and Pressure
 V_avg = mean(V_all, 2);         % Average volume across all cycles
