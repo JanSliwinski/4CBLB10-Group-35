@@ -49,7 +49,8 @@ end
 % Reshape data into cycles
 Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
 p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
-
+% T_int = reshape(dataIn(:, 3), [], Ncycles);  % Intake temperature 
+% T_exh = reshape(dataIn(:, 4), [], Ncycles);  % Exhaust temperature
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
 set(gcf, 'Position', [200, 800, 1200, 400]);
@@ -101,6 +102,14 @@ p_filtered_avg = mean(p_filtered, 2);
 %% Calculate Work
 W = trapz(V_avg, p_avg);
 disp(['Calculated work: ', num2str(W), ' J']);
+
+%% Calculate thermodynamic properties for each cycle
+% [Delta_H_all, Delta_U_all, Delta_S_all] = calculateThermoProperties(T_int, T_exh, SpS, Ncycles, Ca);
+% 
+% % Calculate averages
+% Delta_H_avg = mean(Delta_H_all, 2);
+% Delta_U_avg = mean(Delta_U_all, 2);
+% Delta_S_avg = mean(Delta_S_all, 2);
 
 %% Plot pV Diagrams
 figure;
