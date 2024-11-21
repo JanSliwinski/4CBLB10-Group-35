@@ -1,7 +1,6 @@
-Hi all future users!
+Hello everyone,
 
-18.11.2024 is the birthday of this repository. The goal for today is to
-familirise ourselves with all data, scripts and resources provided and
-to already begin some work! Firs tho, I will setup a "struct" to contain
-data for all fuels we will be using, such that while mixing all info on
-constituents are readily available. Fun!
+I have set up the temperature in our Matlab. I added a function
+ThermoProperties which calculates all the H, U and S. Furthermore all the
+code I added to the main file: simple.m ; I commented out in case it breaks 
+anything.
