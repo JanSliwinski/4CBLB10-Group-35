@@ -33,8 +33,11 @@ ValveEvents.CaEVO = 149;
 ValveEvents.CaEVC = -344;
 ValveEvents.CaSOI = -3.2;  % Start of Injection
 
+%% Process experimental data
+%ProcessExperimentData('./session1_Raw/Group 35', 'processed_Data.txt');
+
 %% Load and Reshape Data
-dataFileName = fullfile('Data', 'ExampleDataSet.txt');
+dataFileName = fullfile('processed_Data.txt');
 dataIn = table2array(readtable(dataFileName));
 
 [Nrows, ~] = size(dataIn);
@@ -49,8 +52,8 @@ end
 % Reshape data into cycles
 Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
 p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
-% T_int = reshape(dataIn(:, 3), [], Ncycles);  % Intake temperature 
-% T_exh = reshape(dataIn(:, 4), [], Ncycles);  % Exhaust temperature
+T_int = reshape(dataIn(:, 3), [], Ncycles);  % Intake temperature 
+T_exh = reshape(dataIn(:, 4), [], Ncycles);  % Exhaust temperature
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
 set(gcf, 'Position', [200, 800, 1200, 400]);
