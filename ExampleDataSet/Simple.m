@@ -107,13 +107,25 @@ W = trapz(V_avg, p_avg);
 disp(['Calculated work: ', num2str(W), ' J']);
 
 %% Calculate thermodynamic properties for each cycle
-% [Delta_H_all, Delta_U_all, Delta_S_all] = calculateThermoProperties(T_int, T_exh, SpS, Ncycles, Ca);
+% intake_species = [2, 3];           % Example species (O2 and N2)
+% exhaust_species = [4, 5, 3];       % Example species (CO2, H2O, and N2)
+% Y_int = [0.21, 0.79];              % Mole fractions for intake
+% Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
+% 
+% % Call the function
+% [Delta_H_all, Delta_U_all, Delta_S_all] = ThermoProperties(T_int, T_exh, SpS, Ncycles, Ca, intake_species, exhaust_species, Y_int, Y_exh);
 % 
 % % Calculate averages
 % Delta_H_avg = mean(Delta_H_all, 2);
 % Delta_U_avg = mean(Delta_U_all, 2);
 % Delta_S_avg = mean(Delta_S_all, 2);
 
+%% Key performance indicators
+% % Power calculation
+% P = W*(RPM/2*60);
+% 
+% % Calls the KPI function
+% KPIs = CalculateKPIs(W, mfr_fuel, LHV, P, mfr_CO2, mfr_NOx);
 %% Plot pV Diagrams
 figure;
 tl = tiledlayout(2, 2);
