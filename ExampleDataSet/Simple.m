@@ -37,7 +37,7 @@ ValveEvents.CaSOI = -3.2;  % Start of Injection
 %ProcessExperimentData('./session1_Raw/Group 35', 'processed_Data.txt');
 
 %% Load and Reshape Data
-dataFileName = fullfile('processed_Data.txt');
+dataFileName = fullfile('Data' ,'processed_Data_experiment1.txt');
 dataIn = table2array(readtable(dataFileName));
 
 [Nrows, ~] = size(dataIn);
