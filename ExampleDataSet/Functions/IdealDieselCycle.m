@@ -1,4 +1,4 @@
-function [P_cycle, V_cycle] = IdealDieselCycle(Cyl, P1, T1, T4, numPoints, k, rc)
+  function [P_cycle, V_cycle] = IdealDieselCycle(Cyl, P1, T1, T4, numPoints, k, rc)
     % Constants
     % k is provided as an input
     
