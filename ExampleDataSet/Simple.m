@@ -52,8 +52,23 @@ end
 % Reshape data into cycles
 Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
 p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
-T_int = reshape(dataIn(:, 3), [], Ncycles);  % Intake temperature 
-T_exh = reshape(dataIn(:, 4), [], Ncycles);  % Exhaust temperature
+mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel flow rate in Kg/s
+% T_int = reshape(dataIn(:, 3), [], Ncycles);  % Intake temperature 
+% T_exh = reshape(dataIn(:, 4), [], Ncycles);  % Exhaust temperature
+%% Load Exhaust Gas Data
+exhaustGasFile = fullfile('Data','Session1.xlsx');
+firstTableRange = 'B6:H15';  % Adjust range as needed
+firstTable = readtable(exhaustGasFile, 'Range', firstTableRange, 'VariableNamingRule', 'preserve');
+O2_percent = firstTable{1, 'O2 [%]'};
+
+% Expand the single O2% value into a row vector matching the number of cycles in mfr_fuel
+O2_percent_vector = repmat(O2_percent, 1, size(mfr_fuel, 2)); 
+
+%% Calculate Air Mass Flow Rate
+AFR_stoich = 14.5;  % Stoichiometric AFR for diesel
+mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
+
+disp(mfr_air)
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
 set(gcf, 'Position', [200, 800, 1200, 400]);
