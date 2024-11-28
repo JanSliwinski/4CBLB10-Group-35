@@ -42,3 +42,14 @@ averageData = sumData / numFiles;
 %Write this avaraged data to a new .txt file so it can be easily
 %implemented in the main code
 writematrix(averageData, './ExampleDataSet/Data/processed_Data_experiment1.txt');
+
+%NOTE: the columns contain the following data:
+% 1 - Crank Angle (deg)
+% 2 - Pressure (bar)
+% 3 - Sensor current (mA)
+% 4 - Fuel mass flow (g/s)
+
+% Display success message
+fprintf('Processed data saved to: %s\n', outputFilePath);
+
+

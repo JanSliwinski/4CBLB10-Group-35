@@ -1,6 +1,6 @@
 %% Initialization
 clear; clc; close all;
-addpath("Functions", "Nasa");  % Add necessary paths
+%addpath("Functions", "Nasa");  % Add necessary paths
 
 %% Units and Constants
 mm = 1e-3;
@@ -34,13 +34,20 @@ ValveEvents.CaEVC = -344;
 ValveEvents.CaSOI = -3.2;  % Start of Injection
 
 %% Process experimental data
-%ProcessExperimentData('./session1_Raw/Group 35', 'processed_Data.txt');
+folderpath = './ExampleDataSet/Data/session1_Raw/load3.5'; % path to raw data
+outputfilePath = './ExampleDataSet/Data/processed_Data_experiment1_load3.5.txt'; % path to output file
+averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
 
 %% Load and Reshape Data
-dataFileName = fullfile('Data' ,'processed_Data_experiment1.txt');
+dataFileName = fullfile('Data' ,'processed_Data_experiment1_load3.5.txt');
 dataIn = table2array(readtable(dataFileName));
 
-[Nrows, ~] = size(dataIn);
+%Error handling:
+[Nrows, Ncols] = size(dataIn);
+if Ncols  ~= 4
+    warning('Data loaded does not have the expected amount of columns (4)');
+end
+
 resolution = 0.2;  % Degrees crank angle resolution
 NdatapointsPerCycle = 720 / resolution;
 Ncycles = Nrows / NdatapointsPerCycle;
@@ -52,13 +59,28 @@ end
 % Reshape data into cycles
 Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
 p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
-T_int = reshape(dataIn(:, 3), [], Ncycles);  % Intake temperature 
-T_exh = reshape(dataIn(:, 4), [], Ncycles);  % Exhaust temperature
+S_current = reshape(dataIn(:, 3), [], Ncycles);  % Sensor current 
+Q_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
+
+%% Filter Pressure Data
+polynomialOrder = 3;
+frameLength = 21;  % Must be odd
+
+% Initialize the filtered pressure matrix
+p_filtered = zeros(size(p));
+
+% Apply the filter to each column
+for i = 1:Ncycles
+    p_filtered(:, i) = SGFilter(p(:, i), polynomialOrder, frameLength, 0);
+end
+
+disp('Data filtered and reshaped into cycles');
+
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
 set(gcf, 'Position', [200, 800, 1200, 400]);
 
-plot(Ca, p / bara, 'LineWidth', 1);
+plot(Ca, p_filtered / bara, 'LineWidth', 1);
 xlabel('Crank Angle (°)');
 ylabel('Pressure (bar)');
 xlim([-360, 360]);
@@ -85,17 +107,7 @@ for i = 1:Ncycles
     V_all(:, i) = CylinderVolume(Ca(:, i), Cyl);
 end
 
-%% Filter Pressure Data
-polynomialOrder = 3;
-frameLength = 21;  % Must be odd
-
-% Initialize the filtered pressure matrix
-p_filtered = zeros(size(p));
-
-% Apply the filter to each column
-for i = 1:Ncycles
-    p_filtered(:, i) = SGFilter(p(:, i), polynomialOrder, frameLength, 0);
-end
+disp('Cylider volume calculated / cycle');
 
 %% Calculate Average Volume and Pressure
 V_avg = mean(V_all, 2);         % Average volume across all cycles
@@ -106,12 +118,14 @@ p_filtered_avg = mean(p_filtered, 2);
 W = trapz(V_avg, p_avg);
 disp(['Calculated work: ', num2str(W), ' J']);
 
-%% Calculate thermodynamic properties for each cycle
-% intake_species = [2, 3];           % Example species (O2 and N2)
-% exhaust_species = [4, 5, 3];       % Example species (CO2, H2O, and N2)
-% Y_int = [0.21, 0.79];              % Mole fractions for intake
-% Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
-% 
+%% Calculate thermodynamic properties for each cycle - THIS STILL NEEDS TO BE IMPLEMENTED PROPERLY - NEED TO CALCULAT T_EXHAUST FOR IT SOMEHOW
+%T_int = 295; 
+T_int = 295 * ones(size(Ca)); %assume ambient intake temperature (22C)
+intake_species = [2, 3];           % Example species (O2 and N2)
+exhaust_species = [4, 5, 3];       % Example species (CO2, H2O, and N2)
+Y_int = [0.21, 0.79];              % Mole fractions for intake
+Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
+ 
 % % Call the function
 % [Delta_H_all, Delta_U_all, Delta_S_all] = ThermoProperties(T_int, T_exh, SpS, Ncycles, Ca, intake_species, exhaust_species, Y_int, Y_exh);
 % 
@@ -120,12 +134,16 @@ disp(['Calculated work: ', num2str(W), ' J']);
 % Delta_U_avg = mean(Delta_U_all, 2);
 % Delta_S_avg = mean(Delta_S_all, 2);
 
-%% Key performance indicators
+%% Key performance indicators - this still needs to be implemented properly!!
+mfr_fuel = Q_fuel;
+%mfr_CO2 = 
+%mfr_Nox = 
+LHV = 43 *MJ; %Lower heating value given in the project guide for Diesel B7
 % % Power calculation
-% P = W*(RPM/2*60);
-% 
-% % Calls the KPI function
-% KPIs = CalculateKPIs(W, mfr_fuel, LHV, P, mfr_CO2, mfr_NOx);
+P = W *(RPM/2*60); 
+% Calls the KPI function
+%KPIs = CalculateKPIs(W, mfr_fuel, LHV, p, mfr_CO2, mfr_NOx);
+
 %% Plot pV Diagrams
 figure;
 tl = tiledlayout(2, 2);
@@ -164,6 +182,12 @@ grid on;
 
 sgtitle('pV Diagrams');
 
+if any(p(:) < 0)
+    warning('There are negative pressure values.');
+else
+    disp('All pressure values are non-negative.');
+end
+
 %% Compare Raw and Filtered Pressure Data for a Single Cycle
 figure;
 hold on;
@@ -186,7 +210,7 @@ P1 = p_filtered_avg(idx_IVC);  % Pressure at IVC
 V1 = V_avg(idx_IVC);           % Volume at IVC
 
 % Assume inlet temperature or estimate based on conditions
-T1 = 300;  % K (adjust if you have actual data)
+T1 = 295 ;  % K assumed to be ambient
 
 % Compression ratio
 r = Cyl.CompressionRatio;
