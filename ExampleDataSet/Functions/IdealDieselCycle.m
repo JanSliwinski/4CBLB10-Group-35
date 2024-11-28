@@ -10,7 +10,7 @@
     % Calculate displacement volume Vd
     Vd = (pi / 4) * Bore^2 * Stroke;
     
-    % Clearance volume Vc
+    % Clearance volume Vc 
     Vc = Vd / (r - 1);
     
     % Volumes at key points
