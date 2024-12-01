@@ -1,4 +1,4 @@
-function [P_cycle, V_cycle] = IdealDieselCycle(Cyl, P1, T1, T4, numPoints, k, rc)
+  function [P_cycle, V_cycle] = IdealDieselCycle(Cyl, P1, T1, T4, numPoints, k, rc)
     % Constants
     % k is provided as an input
     
@@ -10,7 +10,7 @@ function [P_cycle, V_cycle] = IdealDieselCycle(Cyl, P1, T1, T4, numPoints, k, rc
     % Calculate displacement volume Vd
     Vd = (pi / 4) * Bore^2 * Stroke;
     
-    % Clearance volume Vc
+    % Clearance volume Vc 
     Vc = Vd / (r - 1);
     
     % Volumes at key points

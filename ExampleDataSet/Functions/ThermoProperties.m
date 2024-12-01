@@ -1,4 +1,4 @@
-function [Delta_H_all, Delta_U_all, Delta_S_all] = ThermoProperties(T_int, T_exh, SpS, Ncycles, Ca, intake_species, exhaust_species, Y_int, Y_exh)
+ function [Delta_H_all, Delta_U_all, Delta_S_all] = ThermoProperties(T_int, T_exh, SpS, Ncycles, Ca, intake_species, exhaust_species, Y_int, Y_exh)
     % Inputs:
     % T_int           : Matrix of intake temperatures (rows = crank angles, cols = cycles)
     % T_exh           : Matrix of exhaust temperatures (rows = crank angles, cols = cycles)

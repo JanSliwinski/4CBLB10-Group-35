@@ -1,4 +1,43 @@
 function [stoich_coeffs, reaction_eq] = StoichiometricCombustion(fuel_name, SpS, El)
+    % Inputs:
+%   - fuel_name: (string) The name of the fuel species (e.g., 'Methane').
+%   - SpS: (struct array) A database containing species properties, including:
+%       * SpS.Name: (string) Name of the species (e.g., 'O2', 'CO2').
+%       * SpS.Elcomp: (array) Elemental composition of the species [C, H, O, ...].
+%   - El: (struct array) A database containing element properties, including:
+%       * El.Name: (string) Name of the element (e.g., 'C', 'H', 'O').
+
+% Outputs:
+%   - stoich_coeffs: (struct) A structure containing stoichiometric coefficients:
+%       * stoich_coeffs.fuel: Coefficient for the fuel.
+%       * stoich_coeffs.O2: Coefficient for oxygen in reactants.
+%       * stoich_coeffs.N2: Coefficient for nitrogen in reactants.
+%       * stoich_coeffs.CO2: Coefficient for carbon dioxide in products.
+%       * stoich_coeffs.H2O: Coefficient for water in products.
+%       * stoich_coeffs.N2_prod: Coefficient for nitrogen in products.
+%   - reaction_eq: (string) The balanced stoichiometric combustion reaction as a string.
+
+%% Explanation
+% 1. **Identify the Fuel and Its Elemental Composition:**
+%    - Locate the fuel in the SpS database by matching its name.
+%    - Extract the elemental composition of the fuel (number of C, H, and O atoms).
+%    - Raise an error if the fuel does not contain C or H.
+
+% 2. **Determine Stoichiometric Combustion Coefficients:**
+%    - For a fuel molecule CxHyOz, compute:
+%      - b = x (moles of CO2 in products).
+%      - c = y / 2 (moles of H2O in products).
+%      - a = (2b + c - z) / 2 (moles of O2 required for combustion).
+%    - Assume air consists of 3.76 moles of N2 for every mole of O2.
+%      - N2 in reactants = 3.76 * a.
+%      - N2 in products = N2 in reactants.
+
+% 3. **Convert to Integer Coefficients:**
+%    - Scale all coefficients to integers by finding the least common multiple (LCM).
+
+% 4. **Generate the Balanced Reaction Equation:**
+%    - Construct a string representation of the reaction equation using the 
+%      computed stoichiometric coefficients.
     % Find the fuel in SpS
     fuel_idx = find(strcmp({SpS.Name}, fuel_name));
     if isempty(fuel_idx)
