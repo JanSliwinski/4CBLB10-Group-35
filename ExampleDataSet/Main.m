@@ -1,3 +1,4 @@
+warning off
 %% Initialization
 clear; clc; close all;
 addpath("Functions", "Nasa");  % Add necessary paths
