@@ -63,14 +63,14 @@ range1 = 'A8:G16'; % Table 1 range
 range2 = 'A22:G28'; % Table 2 range
 
 % Read Table 1
-table1 = readtable(fileName, 'Sheet', sheetName, 'Range', range1);
+table1experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range1);
 disp('Table 1:');
-disp(table1);
+disp(table1experiment1);
 
 % Read Table 2
-table2 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
+table2experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
 disp('Table 2:');
-disp(table2);
+disp(table2experiment1);
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
 set(gcf, 'Position', [200, 800, 1200, 400]);
