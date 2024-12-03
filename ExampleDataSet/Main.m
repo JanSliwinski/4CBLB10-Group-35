@@ -1,3 +1,4 @@
+warning off
 %% Initialization
 clear; clc; close all;
 %addpath("Functions", "Nasa");  % Add necessary paths
@@ -65,6 +66,7 @@ end
 % Reshape data into cycles
 Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
 p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
+%<<<<<<< HEAD
 S_current = reshape(dataIn(:, 3), [], Ncycles);  % Sensor current 
 mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
 
@@ -82,6 +84,26 @@ end
 
 disp('Data filtered and reshaped into cycles');
 
+% =======
+% T_int = reshape(dataIn(:, 3), [], Ncycles);  % Intake temperature 
+% T_exh = reshape(dataIn(:, 4), [], Ncycles);  % Exhaust temperature
+
+% load the excelfile
+fileName = 'Session1.xlsx';
+sheetName = 'Sheet1';
+range1 = 'A8:G16'; % Table 1 range
+range2 = 'A22:G28'; % Table 2 range
+
+% Read Table 1
+table1experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range1);
+disp('Table 1:');
+disp(table1experiment1);
+
+% Read Table 2
+table2experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
+disp('Table 2:');
+disp(table2experiment1);
+%>>>>>>> b2452164e72c33b9a41ecc6c9454d555500da4ba
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
 set(gcf, 'Position', [200, 800, 1200, 400]);

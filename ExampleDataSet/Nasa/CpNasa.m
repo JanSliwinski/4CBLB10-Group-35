@@ -3,7 +3,7 @@ function [Cp,CpU] = CpNasa(T,Sp)
 % 
 %   Input: T, temperature
 %          Sp, thermal database entry. So-called NASA polynomials
-global Runiv
+Runiv = 8.314;
 Cp=zeros(size(T));CpU=Cp;
 if (isempty(Runiv))
     fprintf('[CpNasa] Assign global Runiv\n');
