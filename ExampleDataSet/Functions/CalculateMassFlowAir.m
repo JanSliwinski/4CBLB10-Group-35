@@ -13,16 +13,16 @@ function mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich)
     % Calculate equivilent ratio (Air Excess Ratio)
     equivilent_ratio = 1 + excess_air / 100;
 
-    % Ensure Data Consistency
-    if size(mfr_fuel, 2) ~= length(equivilent_ratio)
-        error('Mismatch between the number of cycles in fuel data and O2 percentage data!');
-    end
+    % % Ensure Data Consistency
+    % if size(mfr_fuel, 2) ~= length(equivilent_ratio)
+    %     warning('Mismatch between the number of cycles in fuel data and O2 percentage data!');
+    % end
 
     % Initialize air mass flow rate matrix
     mfr_air = zeros(size(mfr_fuel));
 
     % Loop through each cycle
     for i = 1:size(mfr_fuel, 2)
-        mfr_air(:, i) = equivilent_ratio(i) .* AFR_stoich .* mfr_fuel(:, i);
+        mfr_air(:, i) = equivilent_ratio .* AFR_stoich .* mfr_fuel(:, i);
     end
 end

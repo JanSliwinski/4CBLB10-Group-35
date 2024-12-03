@@ -1,4 +1,4 @@
-function [stoich_coeffs, reaction_eq] = StoichiometricCombustion(fuel_name, SpS, El)
+function [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El)
     % Inputs:
 %   - fuel_name: (string) The name of the fuel species (e.g., 'Methane').
 %   - SpS: (struct array) A database containing species properties, including:
@@ -38,7 +38,8 @@ function [stoich_coeffs, reaction_eq] = StoichiometricCombustion(fuel_name, SpS,
 % 4. **Generate the Balanced Reaction Equation:**
 %    - Construct a string representation of the reaction equation using the 
 %      computed stoichiometric coefficients.
-    % Find the fuel in SpS
+    
+% Find the fuel in SpS
     fuel_idx = find(strcmp({SpS.Name}, fuel_name));
     if isempty(fuel_idx)
         error('Fuel %s not found in SpS.', fuel_name);
@@ -108,10 +109,20 @@ function [stoich_coeffs, reaction_eq] = StoichiometricCombustion(fuel_name, SpS,
     stoich_coeffs.CO2 = CO2_coeff;
     stoich_coeffs.H2O = H2O_coeff;
     stoich_coeffs.N2_prod = N2_prod_coeff;
-
     % Reaction equation string
     reaction_eq = sprintf('%g %s + %g O2 + %g N2 -> %g CO2 + %g H2O + %g N2', ...
         fuel_coeff, fuel_name, O2_coeff, N2_coeff, CO2_coeff, H2O_coeff, N2_prod_coeff);
+
+    % Molecular weights
+    MW_O2 = 32;  % g/mol
+    MW_N2 = 28;  % g/mol
+    MW_air = MW_O2 + 3.76 * MW_N2;  % Air molecular weight
+    MW_fuel = x * 12 + y * 1 + z * 16;  % Fuel molecular weight
+
+    mass_air = a * MW_air;  % Mass of air required
+
+    % Stoichiometric air-fuel ratio
+    AFR_stoich = mass_air / MW_fuel;
 end
 
 function denom = denominator(x)

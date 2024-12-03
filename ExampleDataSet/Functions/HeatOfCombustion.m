@@ -117,7 +117,7 @@ function h = SpeciesEnthalpy(T, species)
     if length(T_ranges) == 3
         T_low = T_ranges(1);
         T_common = T_ranges(2);
-        T_high = T_ranges(3);
+        T_hhigh = T_ranges(3);
     else
         % Assume only one temperature range
         T_low = T_ranges(1);

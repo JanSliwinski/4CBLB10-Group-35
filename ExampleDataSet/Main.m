@@ -12,6 +12,12 @@ volperc = 0.01;  % Emissions are in volume percentages
 ppm = 1e-6;      % Some are in ppm (also a volume fraction)
 g = 1e-3;
 s = 1;
+RPM = 1500;     %constant RPM of experiments
+
+%% Define Fuel used
+fuel_name = 'Diesel';
+LHV = 43e3; %Lower heating value given in the project guide for Diesel B7 J/g
+O2_perc = 14.42; % O2 percentage at exhaust (hardcoded)
 
 %% Load NASA Data (if needed)
 global Runiv
@@ -60,7 +66,7 @@ end
 Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
 p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
 S_current = reshape(dataIn(:, 3), [], Ncycles);  % Sensor current 
-Q_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
+mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
 
 %% Filter Pressure Data
 polynomialOrder = 3;
@@ -110,35 +116,70 @@ end
 disp('Cylider volume calculated / cycle');
 
 %% Calculate Average Volume and Pressure
-V_avg = mean(V_all, 2);         % Average volume across all cycles
-p_avg = mean(p, 2);             % Average pressure across all cycles
+V_avg = mean(V_all, 2);         % Average volume across all cycles for every CA
+p_avg = mean(p, 2);             % Average pressure across all cycles for every CA
 p_filtered_avg = mean(p_filtered, 2);
 
 %% Calculate Work
-W = trapz(V_avg, p_avg);
+W = trapz(V_avg, p_avg); % Calculate the area under the averaged p-V curve
 disp(['Calculated work: ', num2str(W), ' J']);
 
-%% Calculate thermodynamic properties for each cycle - THIS STILL NEEDS TO BE IMPLEMENTED PROPERLY - NEED TO CALCULAT T_EXHAUST FOR IT SOMEHOW
-%T_int = 295; 
-T_int = 295 * ones(size(Ca)); %assume ambient intake temperature (22C)
+%% Stoichiometric calculations
+[stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
+
+%% Calculate mass flow of air:
+O2_percent = O2_perc;
+mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich);
+
+%% Calculata Temperature at exhaust
+T_int = 295.15 * ones(1, 100); %assume ambient intake temperature (22C) [K]
+
+m_fuel_percycle = sum(mfr_fuel, 1) * ((60/RPM)/3600); % calculates the total mass of fuel in [g]
+Q_combustion_percycle = m_fuel_percycle * LHV; % energy of combustion /cycle [J]
+% But some part of this energy will be used as work
+Q_warmingtheair = Q_combustion_percycle - W; % energy used for warming the exhaust gasses [J]
+
+% The rest is used for warming the exhaust gasses
+mfr_exh = mfr_fuel + mfr_air;    % Mass flow rate at the exhaust [g/s]
+m_exh_percycle = sum(mfr_exh, 1) * ((60/RPM)/3600); % cal result fo culates the total mass at exhaust /cycle [g]
+C_p = 1.005; %assume Cp of air [J/g*K]
+delta_T_percycle = Q_warmingtheair ./ (C_p * m_exh_percycle); % change in temperature due to combustion/cycle    
+T_exh = T_int + delta_T_percycle; % exhaust temperature /cycle
+
+% Plot the change of T_exhaust over all cycles
+figure;
+cycles = 1:Ncycles;
+plot(cycles, T_exh, 'LineWidth', 1);
+xlabel('Cycles');
+ylabel('Exhaust temperature (K)');
+xlim([1, 100]);
+title('Exhaust temperature over the 100 cycles run');
+grid on;
+
+%% Thermal efficiency of the engine
+efficiency_percycle = W ./ Q_combustion_percycle; % efficiency for each cycle
+efficiency_avg = mean(efficiency_percycle(2:end)) *100; % average efficieny of cycles (the first cycle is excluded as it varies from the rest - due to starting up)
+
+disp(['Calculated average thermal efficiency: ', num2str(efficiency_avg), ' %']);
+
+%% Calculate thermodynamic properties for each cycle - THIS STILL NEEDS TO BE IMPLEMENTED PROPERLY - NEED TO CALCULAT T_EXHAUST FOR IT SOMEHOW 
 intake_species = [2, 3];           % Example species (O2 and N2)
 exhaust_species = [4, 5, 3];       % Example species (CO2, H2O, and N2)
 Y_int = [0.21, 0.79];              % Mole fractions for intake
 Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
- 
+
 % % Call the function
-% [Delta_H_all, Delta_U_all, Delta_S_all] = ThermoProperties(T_int, T_exh, SpS, Ncycles, Ca, intake_species, exhaust_species, Y_int, Y_exh);
-% 
+%[Delta_H_all, Delta_U_all, Delta_S_all] = ThermoProperties(T_int, T_exh, SpS, Ncycles, Ca, intake_species, exhaust_species, Y_int, Y_exh);
+ 
 % % Calculate averages
 % Delta_H_avg = mean(Delta_H_all, 2);
 % Delta_U_avg = mean(Delta_U_all, 2);
 % Delta_S_avg = mean(Delta_S_all, 2);
 
 %% Key performance indicators - this still needs to be implemented properly!!
-mfr_fuel = Q_fuel;
 %mfr_CO2 = 
 %mfr_Nox = 
-LHV = 43 *MJ; %Lower heating value given in the project guide for Diesel B7
+
 % % Power calculation
 P = W *(RPM/2*60); 
 % Calls the KPI function
@@ -207,11 +248,11 @@ IVC_angle = ValveEvents.CaIVC;  % Crank angle for IVC
 P1 = p_filtered_avg(idx_IVC);  % Pressure at IVC
 V1 = V_avg(idx_IVC);           % Volume at IVC
 % Assume inlet temperature or estimate based on conditions
-<<<<<<< HEAD:ExampleDataSet/Simple.m
-T1 = 295 ;  % K assumed to be ambient
-=======
-T1 = 298.15;  % K (Atmospheric Conditions)
->>>>>>> 475e35b828e24d257af4f15a6e0772a362edca83:ExampleDataSet/Main.m
+% <<<<<<< HEAD:ExampleDataSet/Simple.m
+% T1 = 295 ;  % K assumed to be ambient
+% =======
+% T1 = 298.15;  % K (Atmospheric Conditions)
+% >>>>>>> 475e35b828e24d257af4f15a6e0772a362edca83:ExampleDataSet/Main.m
 
 
 r = Cyl.CompressionRatio;% Compression ratio
