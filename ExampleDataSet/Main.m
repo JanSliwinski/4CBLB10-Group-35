@@ -53,24 +53,37 @@ end
 % Reshape data into cycles
 Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
 p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
-T_int = reshape(dataIn(:, 3), [], Ncycles);  % Intake temperature 
-T_exh = reshape(dataIn(:, 4), [], Ncycles);  % Exhaust temperature
+SC = reshape(dataIn(:, 3), [], Ncycles);  % Sensor current [mA] 
+mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
 
-% load the excelfile
+%% load the excelfile
 fileName = 'Session1.xlsx';
 sheetName = 'Sheet1';
 range1 = 'A8:G16'; % Table 1 range
 range2 = 'A22:G28'; % Table 2 range
 
+
 % Read Table 1
 table1experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range1);
-disp('Table 1:');
-disp(table1experiment1);
+
+load_data = table1experiment1{:, 1};      % Load
+CO_percent_load = table1experiment1{:, 2}; % CO%
+HC_ppm_load = table1experiment1{:, 3};    % HC ppm
+NOx_ppm_load = table1experiment1{:, 4};   % NOx ppm
+CO2_percent_load = table1experiment1{:, 5}; % CO2%
+O2_percent_load = table1experiment1{:, 6}; % O2%
+lambda_load = table1experiment1{:, 7};    % Lambda
 
 % Read Table 2
 table2experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
-disp('Table 2:');
-disp(table2experiment1);
+
+CA = table2experiment1{:, 1};            % Crank Angle (CA)
+CO_percent_CA = table2experiment1{:, 2}; % CO%
+HC_ppm_CA = table2experiment1{:, 3};    % HC ppm
+NOx_ppm_CA = table2experiment1{:, 4};   % NOx ppm
+CO2_percent_CA = table2experiment1{:, 5}; % CO2%
+O2_percent_CA = table2experiment1{:, 6}; % O2%
+lambda_CA = table2experiment1{:, 7};    % Lambda
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
 set(gcf, 'Position', [200, 800, 1200, 400]);
@@ -143,6 +156,20 @@ disp(['Calculated work: ', num2str(W), ' J']);
 % 
 % % Calls the KPI function
 % KPIs = CalculateKPIs(W, mfr_fuel, LHV, P, mfr_CO2, mfr_NOx);
+
+
+%% Load Exhaust Gas Data
+
+O2_percent_vector = repmat(O2_percent_load, 1, 100);
+
+%% Calculate Air Mass Flow Rate
+AFR_stoich = 14.5;  % Stoichiometric AFR for diesel
+mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
+
+disp('Air mass flow rate calculated successfully.');
+
+
+
 %% Plot pV Diagrams
 figure;
 tl = tiledlayout(2, 2);
