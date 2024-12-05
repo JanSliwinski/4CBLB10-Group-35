@@ -1,7 +1,7 @@
 function mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich)
 % Inputs:
 % O2_percent : Vector of O2% values from exhaust gas data.
-% mfr_fuel   : Reshaped matrix of fuel mass flow rates (kg/s).
+% mfr_fuel   : Reshaped matrix of fuel mass flow rates (g/s).
 % AFR_stoich : Stoichiometric air-fuel ratio.
 %
 % Output:
