@@ -1,5 +1,8 @@
+%% Example calculations showcasing the use of introduced functions 
+% for load 3.5 CA = 14 (default)
+
 % Clear command window, workspace, and close all figures
-clc, clear all, close all;
+clc, clear all, close all; warning off
 
 %% Add necessary paths
 % Set relative path to NASA database folder
@@ -19,32 +22,34 @@ NSp = length(SpS); % Number of species
 
 %% Given variables
 % Define mole fractions for each species
-% Percentages represent typical air composition
-O2_percent = 0.1442;      % Oxygen percentage
-CO2_percent = 0.04667;    % Carbon dioxide percentage
-N2_percent = 0.7808;      % Nitrogen percentage
-% Calculate water vapor percentage by subtraction
-H2O_percent = 0.2095 - O2_percent - CO2_percent;
-CO_percent = 0;           % Carbon monoxide percentage
-
-% Collect mole fractions into an array
-moleFractions = [O2_percent, CO2_percent, N2_percent, H2O_percent];
+% fractions represent typical air composition
+O2_frac = 0.1447;      % Oxygen fraction
+CO2_frac = 0.0467;    % Carbon dioxide fracitons
+N2_frac = 0.7808;      % Nitrogen fraction
+% Calculate water vapor fraciton by subtraction
+H2O_frac = 0.2095 - O2_frac - CO2_frac;
+CO_frac = 0;      % Carbon monoxide fraction
 
 % Combustion and thermal parameters
+% These should also be read from a table/structure.
 LHV = 50 * 1e6;           % Lower Heating Value in J/kg
 m_dot_fuel = 0.0013;      % Mass flow rate of fuel (kg/s)
 Q_dot = LHV * m_dot_fuel; % Heat transfer rate (W)
 T_initial = 295.15;       % Initial temperature (K)
-tolerance = 1e3;          % Acceptable error in heat transfer (W)
+tolerance = 1e2;          % Acceptable error in heat transfer (W)
 deltaT = 100;             % Initial guess for temperature change (K)
 error = Inf;              % Initialize error to infinite
 
 % Calculate Air-Fuel Ratio (AFR)
-AFR = compute_AFR(CO2_percent,CO_percent,O2_percent,N2_percent);
-m_dot_air = m_dot_fuel * AFR;     % Mass flow rate of air
+AFR = compute_AFR(CO2_frac,CO_frac,O2_frac,N2_frac);
+m_dot_air = AFR * m_dot_fuel;
 m_dot_tot = m_dot_air + m_dot_fuel; % Total mass flow rate
 
 %% Convert mole fractions to mass fractions
+
+% Collect mole fractions into an array
+moleFractions = [O2_frac, CO2_frac, N2_frac, H2O_frac];
+
 % Get molar masses of species
 Mi = [SpS.Mass]; % Molar masses in kg/mol
 
@@ -75,13 +80,23 @@ while error > tolerance
     error = abs(Q_dot_calculated - Q_dot);
     
     % Increment temperature change and iteration counter
-    deltaT = deltaT + 1;
+    deltaT = deltaT + 0.1;
     counter = counter + 1;
+
+    % for plotting
+    TCum = [TCum T_avg];
+    cpCum = [cpCum cp];
 end
 
 % Display success message and results
 disp("Great Success, cp = ");
 disp(cp);
+
+plot(TCum,cpCum)
+xlabel("Temperature")
+ylabel("C_p")
+title("c_p for post-combustion mixture vs temperature")
+subtitle("linear behaviour?")
 
 %% Repeated display of results
 disp("Great Success, cp = ");
@@ -106,7 +121,7 @@ end
 cp_show = compute_cp(T_test-2000,SpS,massComposition);
 
 % Display results of cp investigation
-fprintf("c_p for T > %i is negative! = \n", T_test, cp_test);
+fprintf("c_p for T > %i is negative! = %f \n", T_test, cp_test);
 fprintf("c_p for %i is %f \n", T_test-2000, cp_show);
 
 %% Compute heat capacity ratio (gamma)
