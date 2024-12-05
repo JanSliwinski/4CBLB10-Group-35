@@ -57,7 +57,7 @@ SC = reshape(dataIn(:, 3), [], Ncycles);  % Sensor current [mA]
 mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
 
 %% load the excelfile
-fileName = 'Session1.xlsx';
+fileName = fullfile('Data', 'Session1.xlsx');
 sheetName = 'Sheet1';
 range1 = 'A8:G16'; % Table 1 range
 range2 = 'A22:G28'; % Table 2 range
@@ -303,18 +303,47 @@ title('Apparent Rate of Heat Release (Average)');
 grid on;
 
 %% Calculate Apparent Heat Release
-aHR_avg = aHR(aROHR_avg, resolution);
+aHR_avg = aHR(aROHR_avg, resolution);  % Assuming aHR function is already defined
 
 % Plot the Apparent Heat Release
 figure;
-plot(Ca(:, 1), aHR_avg, 'LineWidth', 1.5);
+plot(Ca(:, 1), aHR_avg, 'LineWidth', 1.5);  % Ca(:,1) is the crank angle array
 xlabel('Crank Angle (°)');
 ylabel('Apparent Heat Release [J]');
 title('Apparent Heat Release (Average)');
 grid on;
+hold on;
 
+% Determine the Maximum Value and Its Index
+[max_aHR, max_idx] = max(aHR_avg);  % Find the max value and its index
 
+% Calculate 10%, 50%, and 90% of Maximum Value
+val_10 = 0.1 * max_aHR;  % 10% of max
+val_50 = 0.5 * max_aHR;  % 50% of max
+val_90 = 0.9 * max_aHR;  % 90% of max
 
+% Find Crank Angles Before the Peak
+% Use only the range before and including the peak for interpolation
+crank_angle_pre_peak = Ca(1:max_idx, 1);  % Crank angles up to the peak
+aHR_pre_peak = aHR_avg(1:max_idx);       % aHR values up to the peak
+
+% Interpolate for the 10%, 50%, and 90% values
+crank_angle_10 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_10);
+crank_angle_50 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_50);
+crank_angle_90 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_90);
+
+% Plot the Updated Results
+% Highlight points with scatter
+scatter([crank_angle_10, crank_angle_50, crank_angle_90], ...
+        [val_10, val_50, val_90], 'r', 'filled');
+
+% Annotate the points
+text(crank_angle_10, val_10, sprintf('10%% (%.2f°)', crank_angle_10), ...
+    'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 10);
+text(crank_angle_50, val_50, sprintf('50%% (%.2f°)', crank_angle_50), ...
+    'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'FontSize', 10);
+text(crank_angle_90, val_90, sprintf('90%% (%.2f°)', crank_angle_90), ...
+    'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'FontSize', 10);
 
 %% Plot pV Diagrams
 figure;
