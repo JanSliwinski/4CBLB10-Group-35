@@ -87,23 +87,45 @@ disp('Data filtered and reshaped into cycles');
 % =======
 % T_int = reshape(dataIn(:, 3), [], Ncycles);  % Intake temperature 
 % T_exh = reshape(dataIn(:, 4), [], Ncycles);  % Exhaust temperature
+%=======
+SC = reshape(dataIn(:, 3), [], Ncycles);  % Sensor current [mA] 
+mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
+%>>>>>>> 51126a27191a1963030fa9c8e65cc87d3e1a906e
 
-% load the excelfile
+%% load the excelfile
 fileName = 'Session1.xlsx';
 sheetName = 'Sheet1';
 range1 = 'A8:G16'; % Table 1 range
 range2 = 'A22:G28'; % Table 2 range
 
+
 % Read Table 1
 table1experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range1);
-disp('Table 1:');
-disp(table1experiment1);
+
+load_data = table1experiment1{:, 1};      % Load
+CO_percent_load = table1experiment1{:, 2}; % CO%
+HC_ppm_load = table1experiment1{:, 3};    % HC ppm
+NOx_ppm_load = table1experiment1{:, 4};   % NOx ppm
+CO2_percent_load = table1experiment1{:, 5}; % CO2%
+O2_percent_load = table1experiment1{:, 6}; % O2%
+lambda_load = table1experiment1{:, 7};    % Lambda
 
 % Read Table 2
 table2experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
+%<<<<<<< HEAD
 disp('Table 2:');
 disp(table2experiment1);
 %>>>>>>> b2452164e72c33b9a41ecc6c9454d555500da4ba
+%=======
+
+CA = table2experiment1{:, 1};            % Crank Angle (CA)
+CO_percent_CA = table2experiment1{:, 2}; % CO%
+HC_ppm_CA = table2experiment1{:, 3};    % HC ppm
+NOx_ppm_CA = table2experiment1{:, 4};   % NOx ppm
+CO2_percent_CA = table2experiment1{:, 5}; % CO2%
+O2_percent_CA = table2experiment1{:, 6}; % O2%
+lambda_CA = table2experiment1{:, 7};    % Lambda
+%>>>>>>> 51126a27191a1963030fa9c8e65cc87d3e1a906e
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
 set(gcf, 'Position', [200, 800, 1200, 400]);
@@ -203,9 +225,29 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 %mfr_Nox = 
 
 % % Power calculation
+%<<<<<<< HEAD
 P = W *(RPM/2*60); 
 % Calls the KPI function
 %KPIs = CalculateKPIs(W, mfr_fuel, LHV, p, mfr_CO2, mfr_NOx);
+%=======
+% P = W*(RPM/2*60);
+% 
+% % Calls the KPI function
+% KPIs = CalculateKPIs(W, mfr_fuel, LHV, P, mfr_CO2, mfr_NOx);
+
+
+%% Load Exhaust Gas Data
+
+O2_percent_vector = repmat(O2_percent_load, 1, 100);
+
+%% Calculate Air Mass Flow Rate
+AFR_stoich = 14.5;  % Stoichiometric AFR for diesel
+mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
+
+disp('Air mass flow rate calculated successfully.');
+
+
+%>>>>>>> 51126a27191a1963030fa9c8e65cc87d3e1a906e
 
 %% Plot pV Diagrams
 figure;
@@ -263,6 +305,7 @@ legend('show');
 grid on;
 hold off;
 
+%<<<<<<< HEAD
 %% Ideal Diesel Cycle
 % Extract initial conditions from actual data
 % Find index corresponding to Intake Valve Closure (IVC)
@@ -275,40 +318,7 @@ V1 = V_avg(idx_IVC);           % Volume at IVC
 % =======
 % T1 = 298.15;  % K (Atmospheric Conditions)
 % >>>>>>> 475e35b828e24d257af4f15a6e0772a362edca83:ExampleDataSet/Main.m
+%=======
+%>>>>>>> 51126a27191a1963030fa9c8e65cc87d3e1a906e
 
-
-r = Cyl.CompressionRatio;% Compression ratio
-numPoints = 100;  % Number of points per process
-rc = optimized_params(1);
-T4 = optimized_params(2);%Exhaust Temprature
-k = optimized_params(3);%Specific Heat Ratio
-
-
-% Calculate the ideal cycle
-[P_cycle, V_cycle] = IdealDieselCycle(Cyl, P1, T1, T4, numPoints, k, rc);
-
-% Convert volumes and pressures to match units in actual data
-V_cycle_dm3 = V_cycle / dm^3;
-P_cycle_bar = P_cycle / bara;
-
-
-figure;
-loglog(V_avg / dm^3, p_filtered_avg / bara, 'b', 'LineWidth', 1.5);
-hold on;
-
-% Plot adjusted ideal Diesel cycle
-loglog(V_cycle_dm3, P_cycle_bar, 'r--', 'LineWidth', 2);
-
-% Plot key points of the ideal Diesel cycle
-plot(V_cycle_dm3(1), P_cycle_bar(1), 'ko', 'MarkerFaceColor', 'k');                       % Point 1
-plot(V_cycle_dm3(numPoints), P_cycle_bar(numPoints), 'go', 'MarkerFaceColor', 'g');       % Point 2
-plot(V_cycle_dm3(2*numPoints), P_cycle_bar(2*numPoints), 'ro', 'MarkerFaceColor', 'r');   % Point 3
-plot(V_cycle_dm3(3*numPoints), P_cycle_bar(3*numPoints), 'mo', 'MarkerFaceColor', 'm');   % Point 4
-
-xlabel('Volume [dm³]');
-ylabel('Pressure [bar]');
-title('Optimized Ideal Diesel Cycle with Key Points');
-legend('Filtered Average Data', 'Optimized Ideal Diesel Cycle', 'Point 1', 'Point 2', 'Point 3', 'Point 4');
-grid on;
-hold off;
 
