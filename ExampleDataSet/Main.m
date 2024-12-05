@@ -66,7 +66,6 @@ end
 % Reshape data into cycles
 Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
 p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
-%<<<<<<< HEAD
 S_current = reshape(dataIn(:, 3), [], Ncycles);  % Sensor current 
 mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
 
@@ -84,20 +83,11 @@ end
 
 disp('Data filtered and reshaped into cycles');
 
-% =======
-% T_int = reshape(dataIn(:, 3), [], Ncycles);  % Intake temperature 
-% T_exh = reshape(dataIn(:, 4), [], Ncycles);  % Exhaust temperature
-%=======
-SC = reshape(dataIn(:, 3), [], Ncycles);  % Sensor current [mA] 
-mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
-%>>>>>>> 51126a27191a1963030fa9c8e65cc87d3e1a906e
-
 %% load the excelfile
 fileName = 'Session1.xlsx';
 sheetName = 'Sheet1';
 range1 = 'A8:G16'; % Table 1 range
 range2 = 'A22:G28'; % Table 2 range
-
 
 % Read Table 1
 table1experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range1);
@@ -126,6 +116,7 @@ CO2_percent_CA = table2experiment1{:, 5}; % CO2%
 O2_percent_CA = table2experiment1{:, 6}; % O2%
 lambda_CA = table2experiment1{:, 7};    % Lambda
 %>>>>>>> 51126a27191a1963030fa9c8e65cc87d3e1a906e
+
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
 set(gcf, 'Position', [200, 800, 1200, 400]);
@@ -175,20 +166,43 @@ disp(['Calculated work: ', num2str(W), ' J']);
 O2_percent = O2_perc;
 mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich);
 
-%% Calculata Temperature at exhaust
+%% Calculate Temperature at exhaust
 T_int = 295.15 * ones(1, 100); %assume ambient intake temperature (22C) [K]
+[rowsmfr_fuel, colsmfr_fuel] = size(mfr_fuel);
 
-m_fuel_percycle = sum(mfr_fuel, 1) * ((60/RPM)/3600); % calculates the total mass of fuel in [g]
+% Calculate time step per crank angle
+DeltaCA = mean(diff(CA(:,1))); % Step size between crank angles (degrees)
+Delta_t_perCA = (60 * DeltaCA) / (RPM * 360); % Time per crank angle step (s)
+m_fuel_percycle = sum(mfr_fuel, 1) * Delta_t_perCA; % calculates the total mass of fuel in /cycle [g]
+
 Q_combustion_percycle = m_fuel_percycle * LHV; % energy of combustion /cycle [J]
 % But some part of this energy will be used as work
 Q_warmingtheair = Q_combustion_percycle - W; % energy used for warming the exhaust gasses [J]
 
 % The rest is used for warming the exhaust gasses
 mfr_exh = mfr_fuel + mfr_air;    % Mass flow rate at the exhaust [g/s]
-m_exh_percycle = sum(mfr_exh, 1) * ((60/RPM)/3600); % cal result fo culates the total mass at exhaust /cycle [g]
+[rowsmfr_exh, colsmfr_exh] = size(mfr_exh);
+m_exh_percycle = sum(mfr_exh, 1) * Delta_t_perCA; % the total mass at exhaust /cycle [g]
 C_p = 1.005; %assume Cp of air [J/g*K]
 delta_T_percycle = Q_warmingtheair ./ (C_p * m_exh_percycle); % change in temperature due to combustion/cycle    
 T_exh = T_int + delta_T_percycle; % exhaust temperature /cycle
+
+
+%checking whether data is realistic
+avg_m_fuelpercycle = mean(m_fuel_percycle(2:end));
+avg_m_exh_percycle = mean(m_exh_percycle(2:end));
+avg_delt_T = mean(delta_T_percycle(2:end));
+avg_T_exh = mean(T_exh(2:end));
+avg_Q = mean(Q_combustion_percycle(2:end));
+disp(['Average fuel mass per cycle: ', num2str(avg_m_fuelpercycle)]);
+%disp(['Average exhaust mass per cycle: ', num2str(avg_m_exh_percycle)]);
+disp(['Average energy of combustion: ', num2str(avg_Q)]);
+disp(['Average delta T: ', num2str(avg_delt_T)]);
+disp(['Average temperature at exhaust: ', num2str(avg_T_exh)]);
+
+% Jings code for efficiency
+efficiency = (W / (mean(mfr_fuel(:)) * LHV))*100;
+disp(['Jing-s efficiency: ', num2str(efficiency), ' %']);
 
 % Plot the change of T_exhaust over all cycles
 figure;
