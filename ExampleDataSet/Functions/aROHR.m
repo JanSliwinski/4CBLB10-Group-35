@@ -21,7 +21,7 @@ function aROHR = aROHR(p_filtered_avg, V_avg, resolution, gamma)
     dV_dTheta = diff(V_avg) ./ dTheta;
 
     % Calculate ROHR using the formula
-    aROHR = (1 / (gamma - 1)) * (V_avg(1:end-1) .* dp_dTheta + gamma * p_filtered_avg(1:end-1) .* dV_dTheta);
+    aROHR = (1 / (gamma - 1)) * (V_avg(1:end-1) .* dp_dTheta + gamma/(gamma - 1) * p_filtered_avg(1:end-1) .* dV_dTheta);
 
     % Append zero for the last point to match dimensions
     aROHR = [aROHR; 0];
