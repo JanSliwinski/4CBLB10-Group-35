@@ -1,20 +1,28 @@
-function aROHR = aROHR(p, V, gamma, dV_dtheta, dp_dtheta)
-    % Function to compute the Apparent Rate of Heat Release (aROHR)
-    %
-    % Inputs:
-    %   p          - Pressure (Pa)
-    %   V          - Cylinder Volume (m^3)
-    %   gamma      - Ratio of specific heats
-    %   dV_dtheta  - Derivative of volume w.r.t. crank angle (m^3/deg)
-    %   dp_dtheta  - Derivative of pressure w.r.t. crank angle (Pa/deg)
-    %
-    % Output:
-    %   aROHR      - Apparent Rate of Heat Release (J/deg)
+function aROHR = aROHR(p_filtered_avg, V_avg, resolution, gamma)
+% aROHR Apparent Rate of Heat Release
+% Calculates the apparent rate of heat release using pressure and volume data.
+%
+% Inputs:
+%   p_filtered_avg - Filtered average pressure [Pa]
+%   V_avg          - Average volume [m³]
+%   resolution     - Crank angle step size [degrees]
+%   gamma          - Specific heat ratio (assumed constant)
+%
+% Output:
+%   aROHR - Apparent rate of heat release [J/deg]
 
+    % Convert resolution to radians
+    dTheta = deg2rad(resolution);
 
-    
-    % Calculate the aROHR
-    aROHR = (gamma / (gamma - 1)) * p .* dV_dtheta + (1 / (gamma - 1)) * V .* dp_dtheta;
+    % Differentiate pressure with respect to crank angle
+    dp_dTheta = diff(p_filtered_avg) ./ dTheta;
+
+    % Differentiate volume with respect to crank angle
+    dV_dTheta = diff(V_avg) ./ dTheta;
+
+    % Calculate ROHR using the formula
+    aROHR = (1 / (gamma - 1)) * (V_avg(1:end-1) .* dp_dTheta + gamma * p_filtered_avg(1:end-1) .* dV_dTheta);
+
+    % Append zero for the last point to match dimensions
+    aROHR = [aROHR; 0];
 end
-
-
