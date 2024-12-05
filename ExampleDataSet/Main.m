@@ -13,6 +13,7 @@ volperc = 0.01;  % Emissions are in volume percentages
 ppm = 1e-6;      % Some are in ppm (also a volume fraction)
 g = 1e-3;
 s = 1;
+RPM = 1500;
 
 %% Load NASA Data (if needed)
 global Runiv
@@ -150,12 +151,6 @@ disp(['Calculated work: ', num2str(W), ' J']);
 % Delta_U_avg = mean(Delta_U_all, 2);
 % Delta_S_avg = mean(Delta_S_all, 2);
 
-%% Key performance indicators
-% % Power calculation
-% P = W*(RPM/2*60);
-% 
-% % Calls the KPI function
-% KPIs = CalculateKPIs(W, mfr_fuel, LHV, P, mfr_CO2, mfr_NOx);
 
 
 %% Load Exhaust Gas Data
@@ -165,6 +160,25 @@ O2_percent_vector = repmat(O2_percent_load, 1, 100);
 %% Calculate Air Mass Flow Rate
 AFR_stoich = 14.5;  % Stoichiometric AFR for diesel
 mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
+
+% %% Key performance indicators
+% % % Power calculation
+%  P = W*(RPM/2*60);
+% 
+% % Calls the KPI function
+% %Example data for diesel
+% x = 12;
+% LHV = 43e6; %MJ/kg
+% mean_mfr_fuel = mean(mean(mfr_fuel,1))%Temporary mfr_fuel values for each CA experiment until problem solved 
+% MW_Fuel = 200; %Molar weight of fuel
+% % Calls the KPI function
+% KPIs = CalculateKPIs(W, LHV, P, mfr_air, x, NOx_ppm_CA, MW_Fuel, mean_mfr_fuel)
+% crankAngles = (15:21)'; % Assuming crank angles are 15 to 21 degrees
+% fprintf('Crank Angle (°)\tbsNOx\n');
+% fprintf('----------------\t-----\n');
+% for i = 1:length(KPIs.bsNOx)
+%     fprintf('%15.2f\t%5.2f\n', crankAngles(i), KPIs.bsNOx(i));
+% end
 
 %% Add necessary paths
 % Set relative path to NASA database folder
