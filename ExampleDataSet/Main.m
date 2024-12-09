@@ -39,7 +39,7 @@ ValveEvents.CaIVO = -355;
 ValveEvents.CaIVC = -135;
 ValveEvents.CaEVO = 149;
 ValveEvents.CaEVC = -344;
-ValveEvents.CaSOI = -3.2;  % Start of Injection
+ValveEvents.CaSOI = -3.2;  %Start of Injection
 
 %% Process experimental data
 folderpath = './ExampleDataSet/Data/session1_Raw/load3.5'; % path to raw data
@@ -103,11 +103,8 @@ lambda_load = table1experiment1{:, 7};    % Lambda
 
 % Read Table 2
 table2experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
-%<<<<<<< HEAD
 disp('Table 2:');
 disp(table2experiment1);
-
-
 CA = table2experiment1{:, 1};            % Crank Angle (CA)
 CO_percent_CA = table2experiment1{:, 2}; % CO%
 HC_ppm_CA = table2experiment1{:, 3};    % HC ppm
@@ -163,8 +160,10 @@ disp(['Calculated work: ', num2str(W), ' J']);
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
 
 %% Calculate mass flow of air:
-O2_percent = O2_perc;
-mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich);
+% Load Exhaust Gas Data
+avg_O2_load35 = mean(O2_percent_load(4:6));
+O2_percent_vector = avg_O2_load35 * size(1, 100);
+mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
 
 %% Calculate Temperature at exhaust
 T_int = 295.15 * ones(1, 100); %assume ambient intake temperature (22C) [K]
@@ -186,7 +185,6 @@ m_exh_percycle = sum(mfr_exh, 1) * Delta_t_perCA; % the total mass at exhaust /c
 C_p = 1.005; %assume Cp of air [J/g*K]
 delta_T_percycle = Q_warmingtheair ./ (C_p * m_exh_percycle); % change in temperature due to combustion/cycle    
 T_exh = T_int + delta_T_percycle; % exhaust temperature /cycle
-
 
 %checking whether data is realistic
 avg_m_fuelpercycle = mean(m_fuel_percycle(2:end));
@@ -214,11 +212,17 @@ xlim([1, 100]);
 title('Exhaust temperature over the 100 cycles run');
 grid on;
 
+%% Run the energy of combustion calculation - aROHR way
+% [Q_combustion] = MASSHeatOfCombustion(pre, V, Ca, mfr_fuel, Delta_t_perCA, ValveEvents, SpS);
+
 %% Thermal efficiency of the engine
 efficiency_percycle = W ./ Q_combustion_percycle; % efficiency for each cycle
 efficiency_avg = mean(efficiency_percycle(2:end)) *100; % average efficieny of cycles (the first cycle is excluded as it varies from the rest - due to starting up)
 
 disp(['Calculated average thermal efficiency: ', num2str(efficiency_avg), ' %']);
+
+%%Calculate Cp and gamma
+[cp, gamma] = JansCpGammafunc(LHV,mfr_fuel, mfr_air, T_int, AFR_stoich);
 
 %% Calculate thermodynamic properties for each cycle - THIS STILL NEEDS TO BE IMPLEMENTED PROPERLY - NEED TO CALCULAT T_EXHAUST FOR IT SOMEHOW 
 intake_species = [2, 3];           % Example species (O2 and N2)
@@ -240,27 +244,19 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 %mfr_Nox = 
 
 % % Power calculation
-P = W *(RPM/2*60); 
+% Power = W *(RPM/2*60); 
 % Calls the KPI function
 %KPIs = CalculateKPIs(W, mfr_fuel, LHV, p, mfr_CO2, mfr_NOx);
-%=======
-% P = W*(RPM/2*60);
+
+% Power = W*(RPM/2*60);
 % 
 % % Calls the KPI function
 % KPIs = CalculateKPIs(W, mfr_fuel, LHV, P, mfr_CO2, mfr_NOx);
 
 
-%% Load Exhaust Gas Data
-
-O2_percent_vector = repmat(O2_percent_load, 1, 100);
-
-%% Calculate Air Mass Flow Rate
-AFR_stoich = 14.5;  % Stoichiometric AFR for diesel
-mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
-
 % %% Key performance indicators
 % % % Power calculation
-%  P = W*(RPM/2*60);
+Power = W*(RPM/2*60);
 % 
 % % Calls the KPI function
 % %Example data for diesel
@@ -277,129 +273,115 @@ mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
 %     fprintf('%15.2f\t%5.2f\n', crankAngles(i), KPIs.bsNOx(i));
 % end
 
-%% Add necessary paths
-% Set relative path to NASA database folder
-relativepath_to_generalfolder = 'Nasa'; % Adjust if necessary
-addpath(relativepath_to_generalfolder);
-
-%% Load Nasa database
-% Construct full path to thermal database and load it
-TdataBase = fullfile('Nasa', 'NasaThermalDatabase');
-load(TdataBase);
-
-%% Find species
-% Locate indexes of specific species in the database
-iSp = myfind({Sp.Name}, {'O2', 'CO2', 'N2','H2O'}); % Find indexes of these species
-SpS = Sp(iSp); % Create subset of species based on found indexes
-NSp = length(SpS); % Number of species
-
-%% Given variables
-% Define mole fractions for each species
-% fractions represent typical air composition
-O2_frac = 0.1447;      % Oxygen fraction
-CO2_frac = 0.0467;    % Carbon dioxide fracitons
-N2_frac = 0.7808;      % Nitrogen fraction
-% Calculate water vapor fraciton by subtraction
-H2O_frac = 0.2095 - O2_frac - CO2_frac;
-CO_frac = 0;      % Carbon monoxide fraction
-
-% Combustion and thermal parameters
-% These should also be read from a table/structure.
-LHV = 50 * 1e6;           % Lower Heating Value in J/kg
-m_dot_fuel = 0.0013;      % Mass flow rate of fuel (kg/s)
-Q_dot = LHV * m_dot_fuel; % Heat transfer rate (W)
-T_initial = 295.15;       % Initial temperature (K)
-tolerance = 1e2;          % Acceptable error in heat transfer (W)
-deltaT = 100;             % Initial guess for temperature change (K)
-error = Inf;              % Initialize error to infinite
-
-% Calculate Air-Fuel Ratio (AFR)
-AFR = compute_AFR(CO2_frac,CO_frac,O2_frac,N2_frac);
-m_dot_air = AFR * m_dot_fuel;
-m_dot_tot = m_dot_air + m_dot_fuel; % Total mass flow rate
-
-%% Convert mole fractions to mass fractions
-
-% Collect mole fractions into an array
-moleFractions = [O2_frac, CO2_frac, N2_frac, H2O_frac];
-
-% Get molar masses of species
-Mi = [SpS.Mass]; % Molar masses in kg/mol
-
-% Calculate mass composition based on mole fractions and molar masses
-massComposition = (moleFractions .* Mi) / sum(moleFractions .* Mi);
-
-% Initialize counter for iteration tracking
-counter = 0;
-cpCum = []; % Array to potentially store cumulative cp values
-TCum = [];  % Array to potentially store cumulative temperatures
-
-%% Iterative calculation to find temperature change
-% Iterate until calculated heat transfer is within tolerance of given heat transfer
-while error > tolerance
-    % Calculate new temperature
-    T = T_initial + deltaT;
-    
-    % Compute average temperature for cp calculation
-    T_avg = (T + T_initial) / 2;
-    
-    % Calculate specific heat capacity at constant pressure
-    cp = compute_cp(T_avg, SpS, massComposition);
-    
-    % Calculate heat transfer based on current cp and temperature change
-    Q_dot_calculated = m_dot_tot * cp * deltaT;
-    
-    % Compute the error between calculated and given heat transfer
-    error = abs(Q_dot_calculated - Q_dot);
-    
-    % Increment temperature change and iteration counter
-    deltaT = deltaT + 0.1;
-    counter = counter + 1;
-
-    % for plotting
-    TCum = [TCum T_avg];
-    cpCum = [cpCum cp];
-end
-
-% Display success message and results
-disp("Great Success, cp = ");
-disp(cp);
-
-plot(TCum,cpCum)
-xlabel("Temperature")
-ylabel("C_p")
-title("c_p for post-combustion mixture vs temperature")
-subtitle("linear behaviour?")
-
-%% Repeated display of results
-disp("Great Success, cp = ");
-disp(cp);
-disp("Counter = ")
-disp(counter)
-disp("DeltaT = ")
-disp(deltaT)
-
-%% Find temperature where specific heat capacity becomes negative
-% Start at a high temperature
-T_test = 5000;
-cp_test = 5;
-
-% Decrease temperature until cp becomes negative
-while cp_test > 0
-    cp_test = compute_cp(T_test,SpS,massComposition);
-    T_test = T_test + 1;
-end
-
-% Compute cp at a temperature slightly below the negative cp point
-cp_show = compute_cp(T_test-2000,SpS,massComposition);
-
-% Display results of cp investigation
-fprintf("c_p for T > %i is negative! = %f \n", T_test, cp_test);
-fprintf("c_p for %i is %f \n", T_test-2000, cp_show);
-
-%% Compute heat capacity ratio (gamma)
-% Calculate ratio of cp to cv at maximum combustion temperature
-gamma = compute_cp(T,SpS,massComposition) / compute_cv(T,SpS,massComposition);
+% %% Given variables
+% % Define mole fractions for each species
+% % fractions represent typical air composition
+% O2_frac = 0.1447;      % Oxygen fraction
+% CO2_frac = 0.0467;    % Carbon dioxide fracitons
+% N2_frac = 0.7808;      % Nitrogen fraction
+% % Calculate water vapor fraciton by subtraction
+% H2O_frac = 0.2095 - O2_frac - CO2_frac;
+% CO_frac = 0;      % Carbon monoxide fraction
+% 
+% % Combustion and thermal parameters
+% % These should also be read from a table/structure.
+% m_dot_fuel = mean(mfr_fuel);      % Mass flow rate of fuel (kg/s)
+% Q_dot = Q_combustion_percycle;    % Heat transfer rate (W)
+% T_initial = T_int;       % Initial temperature (K)
+% tolerance = 1e2;          % Acceptable error in heat transfer (W)
+% deltaT = delta_T_percycle;             % Initial guess for temperature change (K)
+% error = Inf;              % Initialize error to infinite
+% m_dot_air = mfr_air;
+% m_dot_tot = m_dot_air + m_dot_fuel; % Total mass flow rate
+% 
+% %% Find species
+% % Locate indexes of specific species in the database
+% iSp = myfind({Sp.Name}, {'O2', 'CO2', 'N2','H2O'}); % Find indexes of these species
+% SpS = Sp(iSp); % Create subset of species based on found indexes
+% NSp = length(SpS); % Number of species
+% 
+% %% Convert mole fractions to mass fractions
+% 
+% % Collect mole fractions into an array
+% moleFractions = [O2_frac, CO2_frac, N2_frac, H2O_frac];
+% 
+% % Get molar masses of species
+% Mi = [SpS.Mass]; % Molar masses in kg/mol
+% 
+% % Calculate mass composition based on mole fractions and molar masses
+% massComposition = (moleFractions .* Mi) / sum(moleFractions .* Mi);
+% 
+% % Initialize counter for iteration tracking
+% counter = 0;
+% cpCum = []; % Array to potentially store cumulative cp values
+% TCum = [];  % Array to potentially store cumulative temperatures
+% 
+% %% Iterative calculation to find temperature change
+% % Iterate until calculated heat transfer is within tolerance of given heat transfer
+% while error > tolerance
+%     % Calculate new temperature
+%     T = T_initial + deltaT;
+% 
+%     % Compute average temperature for cp calculation
+%     T_avg = (T + T_initial) / 2;
+% 
+%     % Calculate specific heat capacity at constant pressure
+%     cp = compute_cp(T_avg, SpS, massComposition);
+% 
+%     % Calculate heat transfer based on current cp and temperature change
+%     Q_dot_calculated = m_dot_tot * cp * deltaT;
+% 
+%     % Compute the error between calculated and given heat transfer
+%     error = abs(Q_dot_calculated - Q_dot);
+% 
+%     % Increment temperature change and iteration counter
+%     deltaT = deltaT + 0.1;
+%     counter = counter + 1;
+% 
+%     % for plotting
+%     TCum = [TCum T_avg];
+%     cpCum = [cpCum cp];
+% end
+% 
+% % Display success message and results
+% disp("Great Success, cp = ");
+% disp(cp);
+% 
+% plot(TCum,cpCum)
+% xlabel("Temperature")
+% ylabel("C_p")
+% title("c_p for post-combustion mixture vs temperature")
+% subtitle("linear behaviour?")
+% 
+% %% Repeated display of results
+% disp("Great Success, cp = ");
+% disp(cp);
+% disp("Counter = ")
+% disp(counter)
+% disp("DeltaT = ")
+% disp(deltaT)
+% 
+% %% Find temperature where specific heat capacity becomes negative
+% % Start at a high temperature
+% T_test = 5000;
+% cp_test = 5;
+% 
+% % Decrease temperature until cp becomes negative
+% while cp_test > 0
+%     cp_test = compute_cp(T_test,SpS,massComposition);
+%     T_test = T_test + 1;
+% end
+% 
+% % Compute cp at a temperature slightly below the negative cp point
+% cp_show = compute_cp(T_test-2000,SpS,massComposition);
+% 
+% % Display results of cp investigation
+% fprintf("c_p for T > %i is negative! = %f \n", T_test, cp_test);
+% fprintf("c_p for %i is %f \n", T_test-2000, cp_show);
+% 
+% %% Compute heat capacity ratio (gamma)
+% % Calculate ratio of cp to cv at maximum combustion temperature
+% gamma = compute_cp(T,SpS,massComposition) / compute_cv(T,SpS,massComposition);
 
 %% Calculate aROHR
  
