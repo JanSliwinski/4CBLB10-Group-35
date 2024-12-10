@@ -1,4 +1,17 @@
-function [cp, gamma] = JansCpcode(LHV,mfr_fuel, mfr_air, T_int, AFR_stoich,)
+function [cp, gamma] = calc_cp_gamma(LHV, mfr_fuel, mfr_air)
+%Example calculations showcasing the use of introduced functions 
+% for load 3.5 CA = 14 (default)
+
+%% Add necessary paths
+% Set relative path to NASA database folder
+relativepath_to_generalfolder = 'Nasa'; % Adjust if necessary
+addpath(relativepath_to_generalfolder);
+
+%% Load Nasa database
+% Construct full path to thermal database and load it
+TdataBase = fullfile('Nasa', 'NasaThermalDatabase');
+load(TdataBase);
+
 %% Find species
 % Locate indexes of specific species in the database
 iSp = myfind({Sp.Name}, {'O2', 'CO2', 'N2','H2O'}); % Find indexes of these species
@@ -17,13 +30,16 @@ CO_frac = 0;      % Carbon monoxide fraction
 
 % Combustion and thermal parameters
 % These should also be read from a table/structure.
-Q_dot = LHV * mfr_fuel; % Heat transfer rate (W)
-tolerance = 1e2;          % Acceptable error in heat transfer (W)
+m_dot_fuel = mfr_fuel;      % Mass flow rate of fuel (kg/s)
+Q_dot = LHV * m_dot_fuel; % Heat transfer rate (W)
+T_initial = 295.15;       % Initial temperature (K)
+tolerance = 0.01;          % Acceptable error in heat transfer (W)
 deltaT = 100;             % Initial guess for temperature change (K)
-error = Inf;              % Initialize error to infinite
+error = 100;              % Initialize error to infinite
 
 % Calculate Air-Fuel Ratio (AFR)
-m_dot_tot = mfr_air + mfr_fuel; % Total mass flow rate
+m_dot_air = mfr_air;
+m_dot_tot = m_dot_air + m_dot_fuel; % Total mass flow rate
 
 %% Convert mole fractions to mass fractions
 
@@ -45,10 +61,10 @@ TCum = [];  % Array to potentially store cumulative temperatures
 % Iterate until calculated heat transfer is within tolerance of given heat transfer
 while error > tolerance
     % Calculate new temperature
-    T = T_int + deltaT;
+    T = T_initial + deltaT;
     
     % Compute average temperature for cp calculation
-    T_avg = (T + T_int) / 2;
+    T_avg = (T + T_initial) / 2;
     
     % Calculate specific heat capacity at constant pressure
     cp = compute_cp(T_avg, SpS, massComposition);
@@ -69,8 +85,7 @@ while error > tolerance
 end
 
 % Display success message and results
-disp("Great Success, cp = ");
-disp(cp);
+disp(['Great succes, cp:', num2str(cp)]);
 
 plot(TCum,cpCum)
 xlabel("Temperature")
@@ -108,4 +123,6 @@ fprintf("c_p for %i is %f \n", T_test-2000, cp_show);
 % Calculate ratio of cp to cv at maximum combustion temperature
 gamma = compute_cp(T,SpS,massComposition) / compute_cv(T,SpS,massComposition);
 
+% Display heat capacity ratio
+fprintf("Gamma for combustion is equal to %f",gamma);
 end
