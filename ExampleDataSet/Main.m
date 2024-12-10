@@ -13,7 +13,7 @@ volperc = 0.01;  % Emissions are in volume percentages
 ppm = 1e-6;      % Some are in ppm (also a volume fraction)
 g = 1e-3;
 s = 1;
-RPM = 1500;     %constant RPM of experiments
+RPM = 1500;     % constant RPM of experiments
 
 %% Define Fuel used
 fuel_name = 'Diesel';
@@ -21,6 +21,7 @@ LHV = 43e3; %Lower heating value given in the project guide for Diesel B7 J/g
 O2_perc = 14.42; % O2 percentage at exhaust (hardcoded)
 x = 12;
 MW_Fuel = 200; %Molar weight of fuel
+
 
 %% Load NASA Data (if needed)
 global Runiv
@@ -105,6 +106,9 @@ lambda_load = table1experiment1{:, 7};    % Lambda
 
 % Read Table 2
 table2experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
+disp('Table 2:');
+disp(table2experiment1);
+
 table2experiment1.Properties.VariableNames = {'CrankAngle', 'CO_percent', 'HC_ppm', 'NOx_ppm', 'CO2_percent', 'O2_percent', 'Lambda'};
 disp('Table 2:');
 disp(table2experiment1);
@@ -160,46 +164,53 @@ p_filtered_avg = mean(p_filtered, 2);
 W = trapz(V_avg, p_avg); % Calculate the area under the averaged p-V curve
 disp(['Calculated work: ', num2str(W), ' J']);
 
+% Constants
+M_C = 12; % Molar mass of Carbon (g/mol)
+M_H = 1; % Molar mass of Hydrogen (g/mol)
+M_CO2 = 44; % Molar mass of CO2 (g/mol)
+mass_CH_ratio = 5.49; % Typical C/H mass ratio for diesel
+
+% Inputs: Known CO2 mass flow rate
+CO2_mass_flow_rate = 0.5; % IDK what this value is but Barrt Sommers says we should have it
+
+% Convert mass CH ratio to molar CH ratio
+molar_CH_ratio = mass_CH_ratio * (M_H / M_C);
+
+% Determine x and y for diesel
+x = 12; % Carbon atoms in standard diesel
+y = molar_CH_ratio * x;
+
+% Calculate molar mass of diesel (CxHy)
+fuel_molar_mass = x * M_C + y * M_H; % in g/mol
+
+% Convert CO2 mass flow rate to molar flow rate
+CO2_molar_flow_rate = CO2_mass_flow_rate / M_CO2; % in mol/s
+
+% Determine the molar flow rate of diesel
+fuel_molar_flow_rate = CO2_molar_flow_rate / x;
+
+% Convert diesel molar flow rate to mass flow rate
+fuel_mass_flow_rate = fuel_molar_flow_rate * fuel_molar_mass; % in g/s
+
+% Result
+fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
+
 %% Stoichiometric calculations
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
 
 %% Calculate mass flow of air:
-O2_percent = O2_perc;
-mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich);
+avg_O2_load35 = mean(O2_percent_load(4:6));  % Load relevant exhaust data from processed excel
+O2_percent_vector = avg_O2_load35 * size(1, 100); %set the correct size for the input
+mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
+
+%% Calculate Cp and gamma
+%[cp, gamma] = calc_cp_gamma(LHV, mfr_fuel, mfr_air);
 
 %% Calculate Temperature at exhaust
 T_int = 295.15 * ones(1, 100); %assume ambient intake temperature (22C) [K]
 [rowsmfr_fuel, colsmfr_fuel] = size(mfr_fuel);
 
-% Calculate time step per crank angle
-DeltaCA = mean(diff(CA(:,1))); % Step size between crank angles (degrees)
-Delta_t_perCA = (60 * DeltaCA) / (RPM * 360); % Time per crank angle step (s)
-m_fuel_percycle = sum(mfr_fuel, 1) * Delta_t_perCA; % calculates the total mass of fuel in /cycle [g]
-
-Q_combustion_percycle = m_fuel_percycle * LHV; % energy of combustion /cycle [J]
-% But some part of this energy will be used as work
-Q_warmingtheair = Q_combustion_percycle - W; % energy used for warming the exhaust gasses [J]
-
-% The rest is used for warming the exhaust gasses
-mfr_exh = mfr_fuel + mfr_air;    % Mass flow rate at the exhaust [g/s]
-[rowsmfr_exh, colsmfr_exh] = size(mfr_exh);
-m_exh_percycle = sum(mfr_exh, 1) * Delta_t_perCA; % the total mass at exhaust /cycle [g]
-C_p = 1.005; %assume Cp of air [J/g*K]
-delta_T_percycle = Q_warmingtheair ./ (C_p * m_exh_percycle); % change in temperature due to combustion/cycle    
-T_exh = T_int + delta_T_percycle; % exhaust temperature /cycle
-
-
-%checking whether data is realistic
-avg_m_fuelpercycle = mean(m_fuel_percycle(2:end));
-avg_m_exh_percycle = mean(m_exh_percycle(2:end));
-avg_delt_T = mean(delta_T_percycle(2:end));
-avg_T_exh = mean(T_exh(2:end));
-avg_Q = mean(Q_combustion_percycle(2:end));
-disp(['Average fuel mass per cycle: ', num2str(avg_m_fuelpercycle)]);
-%disp(['Average exhaust mass per cycle: ', num2str(avg_m_exh_percycle)]);
-disp(['Average energy of combustion: ', num2str(avg_Q)]);
-disp(['Average delta T: ', num2str(avg_delt_T)]);
-disp(['Average temperature at exhaust: ', num2str(avg_T_exh)]);
+[T_exh] = Texhaust(CA, mfr_fuel, mfr_air, RPM, W, LHV, T_int, Ncycles);
 
 % Jings code for efficiency
 efficiency = (W / (mean(mfr_fuel(:)) * LHV))*100;
@@ -214,6 +225,10 @@ ylabel('Exhaust temperature (K)');
 xlim([1, 100]);
 title('Exhaust temperature over the 100 cycles run');
 grid on;
+
+%% Run the energy of combustion calculation - aROHR way
+[Q_combustion] = MASSHeatOfCombustion(p_filtered, V_all, Ca, ValveEvents, gamma);
+disp(['Q combustion aROHR way: ', num2str(Q_combustion), ' J']);
 
 %% Thermal efficiency of the engine
 efficiency_percycle = W ./ Q_combustion_percycle; % efficiency for each cycle
