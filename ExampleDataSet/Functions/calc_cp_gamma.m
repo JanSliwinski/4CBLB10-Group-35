@@ -1,8 +1,6 @@
-%% Example calculations showcasing the use of introduced functions 
+function [cp, gamma] = calc_cp_gamma(LHV, mfr_fuel, mfr_air)
+%Example calculations showcasing the use of introduced functions 
 % for load 3.5 CA = 14 (default)
-
-% Clear command window, workspace, and close all figures
-clc, clear all, close all; warning off
 
 %% Add necessary paths
 % Set relative path to NASA database folder
@@ -32,17 +30,15 @@ CO_frac = 0;      % Carbon monoxide fraction
 
 % Combustion and thermal parameters
 % These should also be read from a table/structure.
-LHV = 43 * 1e6;           % Lower Heating Value in J/kg
-m_dot_fuel = 0.0013;      % Mass flow rate of fuel (kg/s)
+m_dot_fuel = mfr_fuel;      % Mass flow rate of fuel (kg/s)
 Q_dot = LHV * m_dot_fuel; % Heat transfer rate (W)
 T_initial = 295.15;       % Initial temperature (K)
-tolerance = 1e2;          % Acceptable error in heat transfer (W)
+tolerance = 0.01;          % Acceptable error in heat transfer (W)
 deltaT = 100;             % Initial guess for temperature change (K)
-error = 1000;              % Initialize error to infinite
+error = 100;              % Initialize error to infinite
 
 % Calculate Air-Fuel Ratio (AFR)
-AFR = compute_AFR(CO2_frac,CO_frac,O2_frac,N2_frac);
-m_dot_air = AFR * m_dot_fuel;
+m_dot_air = mfr_air;
 m_dot_tot = m_dot_air + m_dot_fuel; % Total mass flow rate
 
 %% Convert mole fractions to mass fractions
@@ -89,8 +85,7 @@ while error > tolerance
 end
 
 % Display success message and results
-disp("Great Success, cp = ");
-disp(cp);
+disp(['Great succes, cp:', num2str(cp)]);
 
 plot(TCum,cpCum)
 xlabel("Temperature")
@@ -130,3 +125,4 @@ gamma = compute_cp(T,SpS,massComposition) / compute_cv(T,SpS,massComposition);
 
 % Display heat capacity ratio
 fprintf("Gamma for combustion is equal to %f",gamma);
+end

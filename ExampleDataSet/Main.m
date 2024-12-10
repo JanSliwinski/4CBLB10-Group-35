@@ -106,6 +106,9 @@ lambda_load = table1experiment1{:, 7};    % Lambda
 
 % Read Table 2
 table2experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
+disp('Table 2:');
+disp(table2experiment1);
+
 table2experiment1.Properties.VariableNames = {'CrankAngle', 'CO_percent', 'HC_ppm', 'NOx_ppm', 'CO2_percent', 'O2_percent', 'Lambda'};
 disp('Table 2:');
 disp(table2experiment1);
@@ -196,8 +199,12 @@ fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
 
 %% Calculate mass flow of air:
-O2_percent = O2_perc;
-mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich);
+avg_O2_load35 = mean(O2_percent_load(4:6));  % Load relevant exhaust data from processed excel
+O2_percent_vector = avg_O2_load35 * size(1, 100); %set the correct size for the input
+mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
+
+%% Calculate Cp and gamma
+%[cp, gamma] = calc_cp_gamma(LHV, mfr_fuel, mfr_air);
 
 %% Calculate Temperature at exhaust
 T_int = 295.15 * ones(1, 100); %assume ambient intake temperature (22C) [K]
@@ -218,6 +225,10 @@ ylabel('Exhaust temperature (K)');
 xlim([1, 100]);
 title('Exhaust temperature over the 100 cycles run');
 grid on;
+
+%% Run the energy of combustion calculation - aROHR way
+[Q_combustion] = MASSHeatOfCombustion(p_filtered, V_all, Ca, ValveEvents, gamma);
+disp(['Q combustion aROHR way: ', num2str(Q_combustion), ' J']);
 
 %% Thermal efficiency of the engine
 efficiency_percycle = W ./ Q_combustion_percycle; % efficiency for each cycle
