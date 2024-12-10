@@ -5,6 +5,7 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_
 %   KPIdataFiles       : Cell array with paths, fuel types, and crank angles.
 %   table2_experiment1 : Table with emissions data (loaded from Excel in main script).
 %   LHV                : Lower Heating Value of the fuel (J/kg).
+%   avg_m_fuelpercycle : Mass of the fuel per cycle (g)
 %   RPM                : Engine RPM.
 %   AFR_stoich         : Stoichiometric Air-Fuel Ratio.
 %   x                  : Coefficient of carbon in fuel (CxHy).
