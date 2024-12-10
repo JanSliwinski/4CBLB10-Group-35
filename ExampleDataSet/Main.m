@@ -19,7 +19,8 @@ RPM = 1500;     %constant RPM of experiments
 fuel_name = 'Diesel';
 LHV = 43e3; %Lower heating value given in the project guide for Diesel B7 J/g
 O2_perc = 14.42; % O2 percentage at exhaust (hardcoded)
-
+x = 12;
+MW_Fuel = 200; %Molar weight of fuel
 
 %% Load NASA Data (if needed)
 global Runiv
@@ -44,7 +45,7 @@ ValveEvents.CaSOI = -3.2;  % Start of Injection
 %% Process experimental data
 folderpath = './ExampleDataSet/Data/session1_Raw/load3.5'; % path to raw data
 outputfilePath = './ExampleDataSet/Data/processed_Data_experiment1_load3.5.txt'; % path to output file
-averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
+% averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
 
 %% Load and Reshape Data
 dataFileName = fullfile('Data' ,'processed_Data_experiment1_load3.5.txt');
@@ -69,6 +70,7 @@ Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
 p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
 S_current = reshape(dataIn(:, 3), [], Ncycles);  % Sensor current 
 mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
+
 
 %% Filter Pressure Data
 polynomialOrder = 3;
@@ -103,10 +105,9 @@ lambda_load = table1experiment1{:, 7};    % Lambda
 
 % Read Table 2
 table2experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
-%<<<<<<< HEAD
+table2experiment1.Properties.VariableNames = {'CrankAngle', 'CO_percent', 'HC_ppm', 'NOx_ppm', 'CO2_percent', 'O2_percent', 'Lambda'};
 disp('Table 2:');
 disp(table2experiment1);
-
 
 CA = table2experiment1{:, 1};            % Crank Angle (CA)
 CO_percent_CA = table2experiment1{:, 2}; % CO%
@@ -234,48 +235,23 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 % Delta_U_avg = mean(Delta_U_all, 2);
 % Delta_S_avg = mean(Delta_S_all, 2);
 
+%% Key performance indicators
+% KPI data
+% Format: data file, fuel, crank angle
+KPIdataFiles = {
+        % fullfile('Data', 'session1_Raw','load3.5' ,'20241125_0000002_3.5 IMEP.txt'), 'Diesel', 14; 
+        fullfile('Data', 'session1_Raw', '20241125_0000010_15CA.txt'), 'GTL50', 15;
+        fullfile('Data', 'session1_Raw', '20241125_0000014_16CA.txt'), 'GTL50', 16;
+        fullfile('Data', 'session1_Raw', '20241125_0000016_17CA.txt'), 'GTL50', 17;
+        fullfile('Data', 'session1_Raw', '20241125_0000013_18CA.txt'), 'GTL50', 18;
+        fullfile('Data', 'session1_Raw', '20241125_0000011_19CA.txt'), 'GTL50', 19;
+        fullfile('Data', 'session1_Raw', '20241125_0000012_20CA.txt'), 'GTL50', 20;
+        fullfile('Data', 'session1_Raw', '20241125_0000017_21CA.txt'), 'GTL50', 21;
+    };
 
-%% Key performance indicators - this still needs to be implemented properly!!
-%mfr_CO2 = 
-%mfr_Nox = 
-
-% % Power calculation
-P = W *(RPM/2*60); 
-% Calls the KPI function
-%KPIs = CalculateKPIs(W, mfr_fuel, LHV, p, mfr_CO2, mfr_NOx);
-%=======
-% P = W*(RPM/2*60);
-% 
-% % Calls the KPI function
-% KPIs = CalculateKPIs(W, mfr_fuel, LHV, P, mfr_CO2, mfr_NOx);
-
-
-%% Load Exhaust Gas Data
-
-O2_percent_vector = repmat(O2_percent_load, 1, 100);
-
-%% Calculate Air Mass Flow Rate
-AFR_stoich = 14.5;  % Stoichiometric AFR for diesel
-mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
-
-% %% Key performance indicators
-% % % Power calculation
-%  P = W*(RPM/2*60);
-% 
-% % Calls the KPI function
-% %Example data for diesel
-% x = 12;
-% LHV = 43e6; %MJ/kg
-% mean_mfr_fuel = mean(mean(mfr_fuel,1))%Temporary mfr_fuel values for each CA experiment until problem solved 
-% MW_Fuel = 200; %Molar weight of fuel
-% % Calls the KPI function
-% KPIs = CalculateKPIs(W, LHV, P, mfr_air, x, NOx_ppm_CA, MW_Fuel, mean_mfr_fuel)
-% crankAngles = (15:21)'; % Assuming crank angles are 15 to 21 degrees
-% fprintf('Crank Angle (°)\tbsNOx\n');
-% fprintf('----------------\t-----\n');
-% for i = 1:length(KPIs.bsNOx)
-%     fprintf('%15.2f\t%5.2f\n', crankAngles(i), KPIs.bsNOx(i));
-% end
+% Generate KPI table
+KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, RPM, AFR_stoich, x, MW_Fuel,Cyl);
+disp(KPITable)
 
 %% Add necessary paths
 % Set relative path to NASA database folder
