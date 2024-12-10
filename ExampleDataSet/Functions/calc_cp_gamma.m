@@ -60,28 +60,28 @@ TCum = [];  % Array to potentially store cumulative temperatures
 %% Iterative calculation to find temperature change
 % Iterate until calculated heat transfer is within tolerance of given heat transfer
 while error > tolerance
-    % Calculate new temperature
-    T = T_initial + deltaT;
+% Calculate new temperature
+T = T_initial + deltaT;
     
-    % Compute average temperature for cp calculation
-    T_avg = (T + T_initial) / 2;
+% Compute average temperature for cp calculation
+T_avg = (T + T_initial) / 2;
     
-    % Calculate specific heat capacity at constant pressure
-    cp = compute_cp(T_avg, SpS, massComposition);
+% Calculate specific heat capacity at constant pressure
+cp = compute_cp(T_avg, SpS, massComposition);
     
-    % Calculate heat transfer based on current cp and temperature change
-    Q_dot_calculated = m_dot_tot * cp * deltaT;
+% Calculate heat transfer based on current cp and temperature change
+Q_dot_calculated = m_dot_tot * cp * deltaT;
     
-    % Compute the error between calculated and given heat transfer
-    error = abs(Q_dot_calculated - Q_dot);
+% Compute the error between calculated and given heat transfer
+error = abs(Q_dot_calculated - Q_dot);
     
-    % Increment temperature change and iteration counter
-    deltaT = deltaT + 0.1;
-    counter = counter + 1;
+% Increment temperature change and iteration counter
+deltaT = deltaT + 0.1;
+counter = counter + 1;
 
-    % for plotting
-    TCum = [TCum T_avg];
-    cpCum = [cpCum cp];
+% for plotting
+TCum = [TCum T_avg];
+cpCum = [cpCum cp];
 end
 
 % Display success message and results
