@@ -1,12 +1,13 @@
-function KPIs = CalculateKPIs(W, mfr_fuel, LHV, P, x, mfr_air, NOx_ppm, MW_Fuel)
+function KPIs = CalculateKPIs(W, mfr_fuel, avg_m_fuelpercycle, LHV, P, x, mfr_air, NOx_ppm, MW_Fuel)
 % Inputs:
-%   x               : Coefficient of carbon in fuel (CxHy)
-%   NOx_ppm_vector  : Vector with NOx part per million reading for each CA (ppm)
-%   W               : Work done Vector with each work done for each CA (J)
-%   mfr_fuel        : Fuel mass flow rate(kg/s) (Should be the same as same load at each CA)
-%   LHV             : Lower heating value of the fuel (J/kg)
-%   P_vector        : Power output for each  CA (W)
-%   mfr_air         : Air mass flow rate (kg/s)
+%   x                  : Coefficient of carbon in fuel (CxHy)
+%   NOx_ppm_vector     : Vector with NOx part per million reading for each CA (ppm)
+%   W                  : Work done Vector with each work done for each CA (J)
+%   avg_m_fuelpercycle : Mass of the fuel per cycle (g)
+%   mfr_fuel           : Fuel mass flow rate(kg/s) (Should be the same as same load at each CA)
+%   LHV                : Lower heating value of the fuel (J/kg)
+%   P_vector           : Power output for each  CA (W)
+%   mfr_air            : Air mass flow rate (kg/s)
 
 % Outputs:
 %   KPIs     : Struct containing calculated KPIs
@@ -14,7 +15,7 @@ function KPIs = CalculateKPIs(W, mfr_fuel, LHV, P, x, mfr_air, NOx_ppm, MW_Fuel)
 MW_CO2 = 44.01;
 
 % Efficiency
-KPIs.Efficiency = W / (mfr_fuel * LHV);
+KPIs.Efficiency = W / (avg_m_fuelpercycle * LHV);
 
 % Brake-Specific Fuel Consumption (BSFC)
 KPIs.BSFC = (mfr_fuel  * 3600) ./ (P / 1000); % g/kWh

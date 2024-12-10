@@ -1,4 +1,4 @@
-function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, RPM, AFR_stoich, x, MW_Fuel,Cyl)
+function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel, Cyl)
 %GENERATEKPITABLE Loads multiple datasets, calculates KPIs, and generates a summary table.
 %
 % Inputs:
@@ -85,7 +85,7 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, RPM,
         end
 
         % Calculate KPIs
-        KPIs = CalculateKPIs(W, mean(mfr_fuel, 'all'), LHV, P, x, mean(mfr_air, 'all'), nox_ppm, MW_Fuel);
+        KPIs = CalculateKPIs(W, mean(mfr_fuel, 'all'), avg_m_fuelpercycle, LHV, P, x, mean(mfr_air, 'all'), nox_ppm, MW_Fuel);
 
         % Populate the i-th row of KPITable
         KPITable(i, :) = {fuel_type, crank_angle, KPIs.Efficiency, KPIs.BSFC, KPIs.bsCO2, KPIs.bsNOx};

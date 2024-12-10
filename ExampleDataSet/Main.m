@@ -250,7 +250,7 @@ KPIdataFiles = {
     };
 
 % Generate KPI table
-KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, RPM, AFR_stoich, x, MW_Fuel,Cyl);
+KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel,Cyl);
 disp(KPITable)
 
 %% Add necessary paths
