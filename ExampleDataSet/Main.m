@@ -246,19 +246,18 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 
 
 KPIdataFiles = {
-        fullfile('Data', 'session1_Raw','load3.5' ,'20241125_0000002_3.5 IMEP.txt'), 'Diesel', 14; 
-        fullfile('Data', 'session1_Raw', '20241125_0000010_15CA.txt'), 'GTL50', 15;
-        fullfile('Data', 'session1_Raw', '20241125_0000014_16CA.txt'), 'GTL50', 16;
-        fullfile('Data', 'session1_Raw', '20241125_0000016_17CA.txt'), 'GTL50', 17;
-        fullfile('Data', 'session1_Raw', '20241125_0000013_18CA.txt'), 'GTL50', 18;
-        fullfile('Data', 'session1_Raw', '20241125_0000011_19CA.txt'), 'GTL50', 19;
-        fullfile('Data', 'session1_Raw', '20241125_0000012_20CA.txt'), 'GTL50', 20;
-        fullfile('Data', 'session1_Raw', '20241125_0000017_21CA.txt'), 'GTL50', 21;
+        fullfile('Data', 'session1_Raw', '20241125_0000010_15CA.txt'), 'Diesel', 15;
+        fullfile('Data', 'session1_Raw', '20241125_0000014_16CA.txt'), 'Diesel', 16;
+        fullfile('Data', 'session1_Raw', '20241125_0000016_17CA.txt'), 'Diesel', 17;
+        fullfile('Data', 'session1_Raw', '20241125_0000013_18CA.txt'), 'Diesel', 18;
+        fullfile('Data', 'session1_Raw', '20241125_0000011_19CA.txt'), 'Diesel', 19;
+        fullfile('Data', 'session1_Raw', '20241125_0000012_20CA.txt'), 'Diesel', 20;
+        fullfile('Data', 'session1_Raw', '20241125_0000017_21CA.txt'), 'Diesel', 21;
     };
 
  %Generate KPI table
-%KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel,Cyl)
-
+KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel,Cyl);
+disp(KPITable)
 
 %% Rate of changes, Pressure and Volume
 % Crank angle change per data point

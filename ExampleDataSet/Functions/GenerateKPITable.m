@@ -43,7 +43,7 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_
 
         ca = reshape(data_in(:, 1), [], n_cycles);          % Crank angle in degrees
         p = reshape(data_in(:, 2), [], n_cycles) * 1e5;     % Pressure in Pa
-        mfr_fuel = reshape(data_in(:, 4), [], n_cycles);    % Fuel mass flow rate (kg/s)
+        mfr_fuel = 0.16;    % Fuel mass flow rate (kg/s)
 
         % Apply Savitzky-Golay filter to pressure data
         polynomial_order = 3; % Adjust based on noise level
