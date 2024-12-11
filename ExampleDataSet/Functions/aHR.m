@@ -13,6 +13,6 @@ function aHR = aHR(aROHR, resolution)
     dTheta = deg2rad(resolution);
 
     % Perform cumulative trapezoidal integration
-    aHR = cumtrapz(aROHR) * dTheta; % Integration over aROHR
+    aHR = cumtrapz(aROHR)* resolution; % Integration over aROHR
 end
 

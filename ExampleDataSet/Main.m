@@ -257,8 +257,8 @@ KPIdataFiles = {
     };
 
  %Generate KPI table
- %KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel,Cyl);
-% disp(KPITable)
+%KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel,Cyl)
+
 
 %% Rate of changes, Pressure and Volume
 % Crank angle change per data point
@@ -284,6 +284,7 @@ plot(Ca(:, 1), aROHR_avg, 'LineWidth', 1.5);
 xlabel('Crank Angle (°)');
 ylabel('Apparent Rate of Heat Release [J/°]');
 title('Apparent Rate of Heat Release (Average)');
+xlim([-35,135])
 grid on;
 
 %% Calculate Apparent Heat Release
@@ -295,6 +296,7 @@ plot(Ca(:, 1), aHR_avg, 'LineWidth', 1.5);  % Ca(:,1) is the crank angle array
 xlabel('Crank Angle (°)');
 ylabel('Apparent Heat Release [J]');
 title('Apparent Heat Release (Average)');
+xlim([-45,135]);
 grid on;
 hold on;
 
