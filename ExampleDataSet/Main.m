@@ -256,14 +256,27 @@ KPIdataFiles = {
         fullfile('Data', 'session1_Raw', '20241125_0000017_21CA.txt'), 'GTL50', 21;
     };
 
-% Generate KPI table
-KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel,Cyl);
-disp(KPITable)
+ %Generate KPI table
+ %KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel,Cyl);
+% disp(KPITable)
 
+%% Rate of changes, Pressure and Volume
+% Crank angle change per data point
+dCA = resolution;
+
+% Pressure change per data point
+dp = diff(p_filtered_avg);
+% Pressure change per Crank angle
+dp_dCA = dp/dCA;
+
+% Volume change per data point
+dV = diff(V_avg);
+% Volume change per Crank angle
+dV_dCA = dV/dCA;
 
 %% Calculate aROHR
  
-aROHR_avg = aROHR(p_filtered_avg, V_avg, resolution, gamma);
+aROHR_avg = aROHR(p_filtered_avg, V_avg, resolution, gamma, dp_dCA, dV_dCA);
 
 % Plot the apparent Rate of Heat Release
 figure;
