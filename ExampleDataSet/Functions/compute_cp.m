@@ -5,7 +5,6 @@ function cp = compute_cp(T, SpS, massComposition)
 % This function computes the specific heat capacity at constant pressure (cp) 
 % for a given mixture of species at a specified temperature using NASA 
 % thermodynamic database.
-%
 % Inputs:
 %   T               - Temperature (units expected to match NASA database, 
 %                     likely Kelvin)
@@ -51,7 +50,6 @@ function cp = compute_cp(T, SpS, massComposition)
 %% Load Nasa database
 TdataBase = fullfile('Nasa', 'NasaThermalDatabase');
 load(TdataBase);
-
 
     NSp = length(SpS);
     cpi = zeros(NSp, 1);

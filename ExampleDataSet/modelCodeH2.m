@@ -4,7 +4,7 @@ warning off
 relativepath_to_generalfolder='General'; % relative reference to General folder (assumes the folder is in you working folder)
 addpath(relativepath_to_generalfolder); 
 %% Load Nasadatabase
-TdataBase=fullfile('General','NasaThermalDatabase');
+TdataBase=fullfile('Nasa','NasaThermalDatabase');
 load(TdataBase);
 %% Nasa polynomials are loaded and globals are set. 
 %% values should not be changed. These are used by all Nasa Functions. 

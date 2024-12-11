@@ -32,13 +32,13 @@ CO_frac = 0;      % Carbon monoxide fraction
 
 % Combustion and thermal parameters
 % These should also be read from a table/structure.
-LHV = 50 * 1e6;           % Lower Heating Value in J/kg
+LHV = 43 * 1e6;           % Lower Heating Value in J/kg
 m_dot_fuel = 0.0013;      % Mass flow rate of fuel (kg/s)
 Q_dot = LHV * m_dot_fuel; % Heat transfer rate (W)
 T_initial = 295.15;       % Initial temperature (K)
 tolerance = 1e2;          % Acceptable error in heat transfer (W)
 deltaT = 100;             % Initial guess for temperature change (K)
-error = Inf;              % Initialize error to infinite
+error = 1000;              % Initialize error to infinite
 
 % Calculate Air-Fuel Ratio (AFR)
 AFR = compute_AFR(CO2_frac,CO_frac,O2_frac,N2_frac);
