@@ -1,4 +1,5 @@
 function aROHR = aROHR(p_filtered_avg, V_avg, resolution, gamma)
+% TEST TEST TEST
 % aROHR Apparent Rate of Heat Release
 % Calculates the apparent rate of heat release using pressure and volume data.
 %
