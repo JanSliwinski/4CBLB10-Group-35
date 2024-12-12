@@ -13,12 +13,12 @@ volperc = 0.01;  % Emissions are in volume percentages
 ppm = 1e-6;      % Some are in ppm (also a volume fraction)
 g = 1e-3;
 s = 1;
-RPM = 1500;     % constant RPM of experiments
+RPM = 1500;     % constant RPM of experiments [rotation/min]
+T_int = 295.15; % assumed temperature at the intake [K]
 
 %% Define Fuel used
 fuel_name = 'Diesel';
 LHV = 43e3; %Lower heating value given in the project guide for Diesel B7 J/g
-O2_perc = 14.42; % O2 percentage at exhaust (hardcoded)
 x = 12;
 MW_Fuel = 200; %Molar weight of fuel
 
@@ -70,8 +70,8 @@ end
 Ca = reshape(dataIn(:, 1), [], Ncycles);      % Crank angle in degrees
 p = reshape(dataIn(:, 2), [], Ncycles) * bara;  % Pressure in Pa
 S_current = reshape(dataIn(:, 3), [], Ncycles);  % Sensor current 
-mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
-
+% mfr_fuel = reshape(dataIn(:, 4), [], Ncycles);  % Fuel mass flow
+mfr_fuel = 0.16;    % assumed constant value for mass flow of fuel [g/s]
 
 %% Filter Pressure Data
 polynomialOrder = 3;
@@ -199,32 +199,30 @@ fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
 
 %% Calculate mass flow of air:
-avg_O2_load35 = mean(O2_percent_load(4:6));  % Load relevant exhaust data from processed excel
-O2_percent_vector = avg_O2_load35 * size(1, 100); %set the correct size for the input
-mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
+O2_percent = mean(O2_percent_load(4:6));  % Load relevant exhaust data from processed excel
+mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich);
 
 %% Calculate Cp and gamma
 % [cp, gamma] = calc_cp_gamma(LHV, mfr_fuel, mfr_air);
 
 %% Cp and gamma
+%C_p = 1005; % Cp of air
 C_p =  1101.6; %Cp manually plugged in from the results of cp and gamma calculations [J/g*K]
 gamma = 1.312562;  % gamma manually plugged in from the results of cp and gamma calculations
 
-%% Calculate Temperature at exhaust
-T_int = 295.15 * ones(1, 100); %assume ambient intake temperature (22C) [K]
-[rowsmfr_fuel, colsmfr_fuel] = size(mfr_fuel);
+%% Calculate Heat of combustion and Temperature at exhaust - LHV way
+[T_exh, Q_combustion_LHV, m_combusted] = Calc_Q_LHV(C_p, mfr_fuel, mfr_air, RPM, W, LHV, T_int);
 
-[T_exh, Q_combustion_percycle, avg_m_fuelpercycle] = Texhaust(CA, C_p, mfr_fuel, mfr_air, RPM, W, LHV, T_int, Ncycles);
-
-%% Run the energy of combustion calculation - aROHR way
-[Q_combustion] = MASSHeatOfCombustion(p_filtered, V_all, Ca, ValveEvents, gamma);
-disp(['Q combustion aROHR way: ', num2str(Q_combustion), ' J']);
+%% Calculate Heat of combustion and Temperature at exhaust - aROHR way
+[Q_combustion_aROHR] = Calc_Q_aROHR(p_filtered, V_all, Ca, ValveEvents, gamma);
+disp(['Q combustion aROHR way: ', num2str(Q_combustion_aROHR), ' J']);
 
 %% Thermal efficiency of the engine
-efficiency_percycle = W ./ Q_combustion_percycle; % efficiency for each cycle
-efficiency_avg = mean(efficiency_percycle(2:end)) *100; % average efficieny of cycles (the first cycle is excluded as it varies from the rest - due to starting up)
-
-disp(['Calculated average thermal efficiency: ', num2str(efficiency_avg), ' %']);
+efficiency_LHV = (W / Q_combustion_LHV) *100; % efficiency for each cycle
+disp(['Calculated average thermal efficiency(LHV): ', num2str(efficiency_LHV), ' %']);
+% 
+% efficiency_LHV = (W / Q_combustion_aROHR) *100; % efficiency for each cycle
+% disp(['Calculated average thermal efficiency(aROHR): ', num2str(efficiency_LHV), ' %']);
 
 %% Calculate thermodynamic properties for each cycle - THIS STILL NEEDS TO BE IMPLEMENTED PROPERLY - NEED TO CALCULAT T_EXHAUST FOR IT SOMEHOW 
 intake_species = [2, 3];           % Example species (O2 and N2)

@@ -32,8 +32,8 @@ CO_frac = 0;      % Carbon monoxide fraction
 
 % Combustion and thermal parameters
 % These should also be read from a table/structure.
-LHV = 43 * 1e6;           % Lower Heating Value in J/kg
-m_dot_fuel = 0.0013;      % Mass flow rate of fuel (kg/s)
+LHV = 43 * 1e6;           % Lower Heating Value in (J/kg)
+m_dot_fuel = 0.00016;      % Mass flow rate of fuel (kg/s)
 Q_dot = LHV * m_dot_fuel; % Heat transfer rate (W)
 T_initial = 295.15;       % Initial temperature (K)
 tolerance = 1e2;          % Acceptable error in heat transfer (W)
@@ -105,6 +105,8 @@ disp("Counter = ")
 disp(counter)
 disp("DeltaT = ")
 disp(deltaT)
+disp("Q_dot_calculated = ")
+disp(Q_dot_calculated)
 
 %% Find temperature where specific heat capacity becomes negative
 % Start at a high temperature
