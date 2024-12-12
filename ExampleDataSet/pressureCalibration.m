@@ -1,5 +1,5 @@
 % Specify location of the experimental file(s) and open them
-folderPath = './Data/session1_Raw/load3.5';
+folderPath = './Data/session1_Raw/load2';
 outputfilePath = './Data/Processed_session1';
 
 % If averaging data also, use this code:
@@ -72,6 +72,6 @@ end
 averageData = sumData / numFiles;
 
 % Save averaged data
-outputFileName = fullfile(outputfilePath, 'averaged_filtered_data_3.5_IMEP.txt');
+outputFileName = fullfile(outputfilePath, 'averaged_filtered_data_2_IMEP.txt');
 disp(['Saving averaged data to: ', outputFileName]);
 writematrix(averageData, outputFileName);
