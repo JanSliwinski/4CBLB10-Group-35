@@ -25,7 +25,7 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_
     zeros(n_rows, 1), ...            % BSFC
     zeros(n_rows, 1), ...            % bsCO2
     zeros(n_rows, 1), ...            % bsNOx
-    'VariableNames', {'FuelType', 'CrankAngle','Work', 'Efficiency', 'BSFC', 'bsCO2', 'bsNOx'});
+    'VariableNames', {'FuelType', 'CrankAngle[°]','Work[J]', 'Efficiency[-]', 'BSFC[g/kWh]', 'bsCO2[g/kWh]', 'bsNOx[g/kWh]'});
 
     %% Loop Through Each Data File to Calculate KPIs
     for i = 1:size(KPIdataFiles, 1)

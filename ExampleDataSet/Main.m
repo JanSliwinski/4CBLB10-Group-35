@@ -44,12 +44,12 @@ ValveEvents.CaEVC = -344;
 ValveEvents.CaSOI = -3.2;  % Start of Injection
 
 %% Process experimental data
-folderpath = './ExampleDataSet/Data/session2_raw/load3.5'; % path to raw data
+folderpath = './ExampleDataSet/Data/session2_Raw/load3.5'; % path to raw data
 outputfilePath = './ExampleDataSet/Data/processed_Data_experiment1_load3.5.txt'; % path to output file
 % averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
 
 %% Load and Reshape Data
-dataFileName = fullfile('Data' ,'processed_Data_experiment1_load3.5.txt');
+dataFileName = fullfile('Data' , 'processed_Data_experiment1_load3.5.txt');
 dataIn = table2array(readtable(dataFileName));
 
 %Error handling:
@@ -246,13 +246,13 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 
 
 KPIdataFiles = {
-        fullfile('Data', 'session2_raw', '20241212_0000002_HVO50_secondexperiment_CA14.txt'), 'HVO50', 14;
-        fullfile('Data', 'session2_raw', '20241212_0000008_HVO50_secondexperiment_CA15.txt'), 'HVO50', 15;
-        fullfile('Data', 'session2_raw', '20241212_0000003_HVO50_secondexperiment_CA16.txt'), 'HVO50', 16;
-        fullfile('Data', 'session2_raw', '20241212_0000004_HVO50_secondexperiment_CA17.txt'), 'HVO50', 17;
-        fullfile('Data', 'session2_raw', '20241212_0000005_HVO50_secondexperiment_CA18.txt'), 'HVO50', 18;
-        fullfile('Data', 'session2_raw', '20241212_0000009_HVO50_secondexperiment_CA19.txt'), 'HVO50', 19;
-        fullfile('Data', 'session2_raw', '20241212_0000006_HVO50_secondexperiment_CA20.txt'), 'HVO50', 20;
+        fullfile('Data', 'session2_Raw', '20241212_0000002_HVO50_secondexperiment_CA14.txt'), 'HVO50', 14;
+        fullfile('Data', 'session2_Raw', '20241212_0000008_HVO50_secondexperiment_CA15.txt'), 'HVO50', 15;
+        fullfile('Data', 'session2_Raw', '20241212_0000003_HVO50_secondexperiment_CA16.txt'), 'HVO50', 16;
+        fullfile('Data', 'session2_Raw', '20241212_0000004_HVO50_secondexperiment_CA17.txt'), 'HVO50', 17;
+        fullfile('Data', 'session2_Raw', '20241212_0000005_HVO50_secondexperiment_CA18.txt'), 'HVO50', 18;
+        fullfile('Data', 'session2_Raw', '20241212_0000009_HVO50_secondexperiment_CA19.txt'), 'HVO50', 19;
+        fullfile('Data', 'session2_Raw', '20241212_0000006_HVO50_secondexperiment_CA20.txt'), 'HVO50', 20;
        
     };
 
