@@ -44,7 +44,7 @@ ValveEvents.CaEVC = -344;
 ValveEvents.CaSOI = -3.2;  % Start of Injection
 
 %% Process experimental data
-folderpath = './ExampleDataSet/Data/session1_Raw/load3.5'; % path to raw data
+folderpath = './ExampleDataSet/Data/session2_raw/load3.5'; % path to raw data
 outputfilePath = './ExampleDataSet/Data/processed_Data_experiment1_load3.5.txt'; % path to output file
 % averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
 
@@ -88,7 +88,7 @@ end
 disp('Data filtered and reshaped into cycles');
 
 %% load the excelfile
-fileName = fullfile('Data', 'Session1.xlsx');
+fileName = fullfile('Data', 'Session2.xlsx');
 sheetName = 'Sheet1';
 range1 = 'A8:G16'; % Table 1 range
 range2 = 'A22:G28'; % Table 2 range
@@ -246,13 +246,14 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 
 
 KPIdataFiles = {
-        fullfile('Data', 'session1_Raw', '20241125_0000010_15CA.txt'), 'Diesel', 15;
-        fullfile('Data', 'session1_Raw', '20241125_0000014_16CA.txt'), 'Diesel', 16;
-        fullfile('Data', 'session1_Raw', '20241125_0000016_17CA.txt'), 'Diesel', 17;
-        fullfile('Data', 'session1_Raw', '20241125_0000013_18CA.txt'), 'Diesel', 18;
-        fullfile('Data', 'session1_Raw', '20241125_0000011_19CA.txt'), 'Diesel', 19;
-        fullfile('Data', 'session1_Raw', '20241125_0000012_20CA.txt'), 'Diesel', 20;
-        fullfile('Data', 'session1_Raw', '20241125_0000017_21CA.txt'), 'Diesel', 21;
+        fullfile('Data', 'session2_raw', '20241212_0000002_HVO50_secondexperiment_CA14.txt'), 'HVO50', 14;
+        fullfile('Data', 'session2_raw', '20241212_0000008_HVO50_secondexperiment_CA15.txt'), 'HVO50', 15;
+        fullfile('Data', 'session2_raw', '20241212_0000003_HVO50_secondexperiment_CA16.txt'), 'HVO50', 16;
+        fullfile('Data', 'session2_raw', '20241212_0000004_HVO50_secondexperiment_CA17.txt'), 'HVO50', 17;
+        fullfile('Data', 'session2_raw', '20241212_0000005_HVO50_secondexperiment_CA18.txt'), 'HVO50', 18;
+        fullfile('Data', 'session2_raw', '20241212_0000009_HVO50_secondexperiment_CA19.txt'), 'HVO50', 19;
+        fullfile('Data', 'session2_raw', '20241212_0000006_HVO50_secondexperiment_CA20.txt'), 'HVO50', 20;
+       
     };
 
  %Generate KPI table

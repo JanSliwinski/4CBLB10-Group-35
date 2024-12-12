@@ -20,11 +20,12 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_
     KPITable = table(...
     strings(n_rows, 1), ...          % FuelType as string array
     zeros(n_rows, 1), ...            % CrankAngle
+    zeros(n_rows, 1), ...            % Work
     zeros(n_rows, 1), ...            % Efficiency
     zeros(n_rows, 1), ...            % BSFC
     zeros(n_rows, 1), ...            % bsCO2
     zeros(n_rows, 1), ...            % bsNOx
-    'VariableNames', {'FuelType', 'CrankAngle', 'Efficiency', 'BSFC', 'bsCO2', 'bsNOx'});
+    'VariableNames', {'FuelType', 'CrankAngle','Work', 'Efficiency', 'BSFC', 'bsCO2', 'bsNOx'});
 
     %% Loop Through Each Data File to Calculate KPIs
     for i = 1:size(KPIdataFiles, 1)
@@ -89,10 +90,7 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_
         KPIs = CalculateKPIs(W, mean(mfr_fuel, 'all'), avg_m_fuelpercycle, LHV, P, x, mean(mfr_air, 'all'), nox_ppm, MW_Fuel);
 
         % Populate the i-th row of KPITable
-        KPITable(i, :) = {fuel_type, crank_angle, KPIs.Efficiency, KPIs.BSFC, KPIs.bsCO2, KPIs.bsNOx};
+        KPITable(i, :) = {fuel_type, crank_angle, W, KPIs.Efficiency, KPIs.BSFC, KPIs.bsCO2, KPIs.bsNOx};
     end
-
-    %% Add Column Names to the KPI Table
-    KPITable.Properties.VariableNames = {'FuelType', 'CrankAngle', 'Efficiency', 'BSFC', 'bsCO2', 'bsNOx'};
 
 end
