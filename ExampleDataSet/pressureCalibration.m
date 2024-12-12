@@ -1,9 +1,9 @@
 % Specify location of the experimental file(s) and open them
-folderPath = './Data/session1_Raw/load2';
+folderPath = './Data/session1_Raw';
 outputfilePath = './Data/Processed_session1';
 
 % If averaging data also, use this code:
-sumData = 0;
+% sumData = 0;
 
 % Create output directory if it doesn't exist
 if ~isfolder(outputfilePath)
@@ -65,13 +65,13 @@ for magic1 = 1:numFiles
     catch ME
         warning('Error processing file %s: %s', fileList(magic1).name, ME.message);
     end
-    sumData = sumData + data;
+    % sumData = sumData + data;
 end
 
 
-averageData = sumData / numFiles;
+% averageData = sumData / numFiles;
 
 % Save averaged data
-outputFileName = fullfile(outputfilePath, 'averaged_filtered_data_2_IMEP.txt');
-disp(['Saving averaged data to: ', outputFileName]);
-writematrix(averageData, outputFileName);
+% outputFileName = fullfile(outputfilePath, 'averaged_filtered_data_2_IMEP.txt');
+% disp(['Saving averaged data to: ', outputFileName]);
+% writematrix(averageData, outputFileName);
