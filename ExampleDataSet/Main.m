@@ -14,13 +14,16 @@ ppm = 1e-6;      % Some are in ppm (also a volume fraction)
 g = 1e-3;
 s = 1;
 RPM = 1500;     % constant RPM of experiments
+M_diesel = 167; % Molar mass (g/mol)
+M_HVO = 226; % Molar mass (g/mol)
+Density_HVO = 0.78;
+Density_Diesel = 0.85;
 
 %% Define Fuel used
 fuel_name = 'Diesel';
 LHV = 43e3; %Lower heating value given in the project guide for Diesel B7 J/g
 O2_perc = 14.42; % O2 percentage at exhaust (hardcoded)
 x = 12;
-MW_Fuel = 200; %Molar weight of fuel
 
 
 %% Load NASA Data (if needed)
@@ -197,7 +200,8 @@ fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
 
 %% Stoichiometric calculations
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
-
+stoich_coeffs.fuel
+reaction_eq
 %% Calculate mass flow of air:
 avg_O2_load35 = mean(O2_percent_load(4:6));  % Load relevant exhaust data from processed excel
 O2_percent_vector = avg_O2_load35 * size(1, 100); %set the correct size for the input
@@ -253,11 +257,11 @@ KPIdataFiles = {
         fullfile('Data', 'session2_Raw', '20241212_0000005_HVO50_secondexperiment_CA18.txt'), 'HVO50', 18;
         fullfile('Data', 'session2_Raw', '20241212_0000009_HVO50_secondexperiment_CA19.txt'), 'HVO50', 19;
         fullfile('Data', 'session2_Raw', '20241212_0000006_HVO50_secondexperiment_CA20.txt'), 'HVO50', 20;
-       
+
     };
 
  %Generate KPI table
-KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel,Cyl);
+KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Diesel,Cyl);
 disp(KPITable)
 
 %% Rate of changes, Pressure and Volume
@@ -401,5 +405,27 @@ hold off;
 % T1 = 298.15;  % K (Atmospheric Conditions)
 
 
+%% Stoichiometric Calculations for HVO
+x_HVO = 16;
+m_fuel_per100cycles = 0.128; %(g)
+%HVO100
+moles_HVO = m_fuel_per100cycles / M_HVO;
+
+moles_O2 = moles_HVO * (3*x_HVO*0.5) + 1/2; % Moles of O2 required
+moles_N2 = moles_O2 * 79/21;   % Moles of N2 in reactants
 
 
+moles_CO2 = moles_HVO * 16; % Moles of CO2 produced
+moles_H2O = moles_HVO * 17; % Moles of H2O produced
+Stoich_HVO100 = [moles_HVO, moles_O2, moles_N2, moles_CO2, moles_H2O, moles_N2];
+%HVO50
+m_fuel_per100cycles = 0.128; %(g)
+
+ a = m_fuel_per100cycles / (((Density_HVO / Density_Diesel) + 1) * M_diesel);
+ b = m_fuel_per100cycles / (((Density_Diesel / Density_HVO) + 1) * M_HVO);
+ e = a * 12 + b * 16;
+ g = a * 23 + b * 34;
+ q = 9.25 * a + 24.5 * b;
+ k = q * (79 / 21);
+ Stoich_HVO50 = [a, b, q, k, e, g/2, k]; %Moles of each Component per 100 cycles
+ 
