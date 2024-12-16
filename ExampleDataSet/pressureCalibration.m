@@ -1,6 +1,6 @@
 % Specify location of the experimental file(s) and open them
-folderPath = './Data/session1_Raw';
-outputfilePath = './Data/Processed_session1';
+folderPath = './Data/session2_Raw';
+outputfilePath = './Data/Processed_session2';
 
 % If averaging data also, use this code:
 % sumData = 0;

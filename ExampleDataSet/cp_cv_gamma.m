@@ -107,26 +107,99 @@ disp("DeltaT = ")
 disp(deltaT)
 
 %% Find temperature where specific heat capacity becomes negative
-% Start at a high temperature
-T_test = 5000;
-cp_test = 5;
+% % Start at a high temperature
+% T_test = 5000;
+% cp_test = 5;
+% 
+% % Decrease temperature until cp becomes negative
+% while cp_test > 0
+%     cp_test = compute_cp(T_test,SpS,massComposition);
+%     T_test = T_test + 1;
+% end
+% 
+% % Compute cp at a temperature slightly below the negative cp point
+% cp_show = compute_cp(T_test-2000,SpS,massComposition);
+% 
+% % Display results of cp investigation
+% fprintf("c_p for T > %i is negative! = %f \n", T_test, cp_test);
+% fprintf("c_p for %i is %f \n", T_test-2000, cp_show);
 
-% Decrease temperature until cp becomes negative
-while cp_test > 0
-    cp_test = compute_cp(T_test,SpS,massComposition);
-    T_test = T_test + 1;
+%%
+
+data_raw = load("./Data/Processed_session1/averaged_filtered_data_3.5_IMEP.txt");
+
+% Using a vectorized approach to average cycles
+n_cycles = 100;
+cycle_length = 3600;
+data_reshaped = reshape(data_raw, cycle_length, n_cycles, 4);
+data_avg = mean(data_reshaped, 2);
+data = squeeze(data_avg);
+
+% Crop -180 to 180
+data = data(180*5:180*15,:);
+
+%plot(data_avg(:,1),data_avg(:,2))
+
+%% Obtaining temperature
+% Assume constant gas constant
+
+T_amb = 295;
+p_amb = 1e5;
+R_air = 287;
+R_exhaust = 292;
+rho = 1.202;
+mm = 0.001;
+
+% Engine Geometry Data
+Cyl.Bore = 104 * mm;
+Cyl.Stroke = 85 * mm;
+Cyl.CompressionRatio = 21.5;
+Cyl.ConRod = 136.5 * mm;
+Cyl.TDCangle = 180;
+
+data(:,5) = CylinderVolume(data(:,1),Cyl);
+
+%% Getting temperature
+
+[maxP,combust] = max(data(:,2));
+m_air = data(1,2)*1e5 * data(1,5) / (R_air * T_amb);
+
+for dummy = 1:size(data,1)
+    if dummy <= combust
+        data(dummy,6) = data(dummy,2)*1e5 * data(dummy,5) / (R_air * m_air);
+        data(dummy,7) = compute_cp(data(dummy,6),SpS,massComposition) ...
+            / (compute_cp(data(dummy,6),SpS,massComposition) - R_air);
+    else
+        data(dummy,6) = data(dummy,2)*1e5 * data(dummy,5) / (R_exhaust * m_air);
+        data(dummy,7) = compute_cp(data(dummy,6),SpS,massComposition) ...
+            / (compute_cp(data(dummy,6),SpS,massComposition) - R_exhaust);
+    end
 end
 
-% Compute cp at a temperature slightly below the negative cp point
-cp_show = compute_cp(T_test-2000,SpS,massComposition);
+plot(data(:,1),data(:,6))
+hold on
+plot(data(:,1),data(:,7))
+hold off% Example Data Preparation (Replace with your actual data)
+% Assuming 'data' is already loaded with appropriate dimensions
+x = data(:,1);    % X-axis
+y1 = data(:,6);   % Data for left y-axis
+y2 = data(:,7);   % Data for right y-axis
 
-% Display results of cp investigation
-fprintf("c_p for T > %i is negative! = %f \n", T_test, cp_test);
-fprintf("c_p for %i is %f \n", T_test-2000, cp_show);
+% Create a new figure
+figure;
 
-%% Compute heat capacity ratio (gamma)
-% Calculate ratio of cp to cv at maximum combustion temperature
-gamma = compute_cp(T,SpS,massComposition) / compute_cv(T,SpS,massComposition);
+% Plot the first dataset on the left y-axis
+yyaxis left
+plot(x, y1, '-b', 'LineWidth', 1.5); % Blue solid line
+ylabel('Left Y-Axis Label');          % Customize as needed
+xlabel('X-Axis Label');               % Customize as needed
+grid on;                               % Optional: Add grid
 
-% Display heat capacity ratio
-fprintf("Gamma for combustion is equal to %f",gamma);
+% Plot the second dataset on the right y-axis
+yyaxis right
+plot(x, y2, '--r', 'LineWidth', 1.5); % Red dashed line
+ylabel('Right Y-Axis Label');          % Customize as needed
+
+% Add a title and legend
+title('Bi-Axial Plot Example');
+legend({'Dataset 1', 'Dataset 2'}, 'Location', 'best');
