@@ -1,4 +1,4 @@
-function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel, Cyl)
+function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, M_fuel, Cyl)
 %GENERATEKPITABLE Loads multiple datasets, calculates KPIs, and generates a summary table.
 %
 % Inputs:
@@ -9,7 +9,7 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_
 %   RPM                : Engine RPM.
 %   AFR_stoich         : Stoichiometric Air-Fuel Ratio.
 %   x                  : Coefficient of carbon in fuel (CxHy).
-%   MW_Fuel            : Molecular weight of the fuel (g/mol).
+%   M_fuel             : Molecular weight of the fuel (g/mol).
 %   Cyl                : Struct containing cylinder data
 %
 % Output:
@@ -87,7 +87,7 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_
         end
 
         % Calculate KPIs
-        KPIs = CalculateKPIs(W, mean(mfr_fuel, 'all'), avg_m_fuelpercycle, LHV, P, x, mean(mfr_air, 'all'), nox_ppm, MW_Fuel);
+        KPIs = CalculateKPIs(W, mean(mfr_fuel, 'all'), avg_m_fuelpercycle, LHV, P, x, mean(mfr_air, 'all'), nox_ppm, M_fuel);
 
         % Populate the i-th row of KPITable
         KPITable(i, :) = {fuel_type, crank_angle, W, KPIs.Efficiency, KPIs.BSFC, KPIs.bsCO2, KPIs.bsNOx};

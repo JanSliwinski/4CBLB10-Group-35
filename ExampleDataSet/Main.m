@@ -109,9 +109,6 @@ lambda_load = table1experiment1{:, 7};    % Lambda
 
 % Read Table 2
 table2experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
-disp('Table 2:');
-disp(table2experiment1);
-
 table2experiment1.Properties.VariableNames = {'CrankAngle', 'CO_percent', 'HC_ppm', 'NOx_ppm', 'CO2_percent', 'O2_percent', 'Lambda'};
 disp('Table 2:');
 disp(table2experiment1);
@@ -248,7 +245,6 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 % KPI data
 % Format: data file, fuel, crank angle
 
-
 KPIdataFiles = {
         fullfile('Data', 'session2_Raw', '20241212_0000002_HVO50_secondexperiment_CA14.txt'), 'HVO50', 14;
         fullfile('Data', 'session2_Raw', '20241212_0000008_HVO50_secondexperiment_CA15.txt'), 'HVO50', 15;
@@ -260,8 +256,11 @@ KPIdataFiles = {
 
     };
 
+% The selected fuel
+M_fuel = M_diesel;
+
  %Generate KPI table
-KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Diesel,Cyl);
+KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, M_fuel,Cyl);
 disp(KPITable)
 
 %% Rate of changes, Pressure and Volume
