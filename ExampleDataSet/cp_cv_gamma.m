@@ -125,81 +125,78 @@ disp(deltaT)
 % fprintf("c_p for %i is %f \n", T_test-2000, cp_show);
 
 %%
+% Load preprocessed data from a specific file
+data = load("./Data/Processed_session1/filtered_averaged_data_3.5_IMEP.txt");
 
-data_raw = load("./Data/Processed_session1/averaged_filtered_data_3.5_IMEP.txt");
-
-% Using a vectorized approach to average cycles
-n_cycles = 100;
-cycle_length = 3600;
-data_reshaped = reshape(data_raw, cycle_length, n_cycles, 4);
-data_avg = mean(data_reshaped, 2);
-data = squeeze(data_avg);
-
-% Crop -180 to 180
+% Crop data from 180*5 to 180*15 indices (focus on specific crank angle range)
 data = data(180*5:180*15,:);
 
-%plot(data_avg(:,1),data_avg(:,2))
+% Ambient and gas constant parameters
+T_amb = 295;   % Ambient temperature [K]
+p_amb = 1e5;   % Ambient pressure [Pa]
+R_air = 287;   % Gas constant for air
+R_exhaust = 292;  % Gas constant for exhaust
+rho = 1.202;   % Air density
+mm = 0.001;    % Millimeter conversion
 
-%% Obtaining temperature
-% Assume constant gas constant
+% Engine Geometry Parameters
+Cyl.Bore = 104 * mm;               % Cylinder bore
+Cyl.Stroke = 85 * mm;              % Cylinder stroke
+Cyl.CompressionRatio = 21.5;       % Compression ratio
+Cyl.ConRod = 136.5 * mm;           % Connecting rod length
+Cyl.TDCangle = 180;                % Top Dead Center angle
 
-T_amb = 295;
-p_amb = 1e5;
-R_air = 287;
-R_exhaust = 292;
-rho = 1.202;
-mm = 0.001;
-
-% Engine Geometry Data
-Cyl.Bore = 104 * mm;
-Cyl.Stroke = 85 * mm;
-Cyl.CompressionRatio = 21.5;
-Cyl.ConRod = 136.5 * mm;
-Cyl.TDCangle = 180;
-
+% Calculate cylinder volume using CylinderVolume function
 data(:,5) = CylinderVolume(data(:,1),Cyl);
 
-%% Getting temperature
-
+% Find maximum pressure and combustion point
 [maxP,combust] = max(data(:,2));
+
+% Calculate initial air mass
 m_air = data(1,2)*1e5 * data(1,5) / (R_air * T_amb);
 
+% Temperature and gamma calculation loop
 for dummy = 1:size(data,1)
+    % Pre-combustion calculations
     if dummy <= combust
+        % Calculate temperature using ideal gas law
         data(dummy,6) = data(dummy,2)*1e5 * data(dummy,5) / (R_air * m_air);
+        
+        % Calculate specific heat ratio (gamma)
         data(dummy,7) = compute_cp(data(dummy,6),SpS,massComposition) ...
             / (compute_cp(data(dummy,6),SpS,massComposition) - R_air);
+    
+    % Post-combustion calculations
     else
+        % Calculate temperature using exhaust gas properties
         data(dummy,6) = data(dummy,2)*1e5 * data(dummy,5) / (R_exhaust * m_air);
+        
+        % Calculate specific heat ratio (gamma)
         data(dummy,7) = compute_cp(data(dummy,6),SpS,massComposition) ...
             / (compute_cp(data(dummy,6),SpS,massComposition) - R_exhaust);
     end
 end
 
-plot(data(:,1),data(:,6))
-hold on
-plot(data(:,1),data(:,7))
-hold off% Example Data Preparation (Replace with your actual data)
-% Assuming 'data' is already loaded with appropriate dimensions
-x = data(:,1);    % X-axis
-y1 = data(:,6);   % Data for left y-axis
-y2 = data(:,7);   % Data for right y-axis
-
-% Create a new figure
+% First figure: Temperature and Gamma vs Crank Angle
 figure;
-
-% Plot the first dataset on the left y-axis
 yyaxis left
-plot(x, y1, '-b', 'LineWidth', 1.5); % Blue solid line
-ylabel('Left Y-Axis Label');          % Customize as needed
-xlabel('X-Axis Label');               % Customize as needed
-grid on;                               % Optional: Add grid
+plot(data(:,1), data(:,6), '-b', 'LineWidth', 1);
+ylabel('Temperature [K]');
+xlabel('CA [deg]');
+grid on;
 
-% Plot the second dataset on the right y-axis
 yyaxis right
-plot(x, y2, '--r', 'LineWidth', 1.5); % Red dashed line
-ylabel('Right Y-Axis Label');          % Customize as needed
+plot(data(:,1), data(:,7), 'r', 'LineWidth', 1);
+ylabel('Gamma [-]');
+title('Temperature and Gamma vs Crank Angle');
+legend({'Temperature', 'Gamma'}, 'Location', 'best');
 
-% Add a title and legend
-title('Bi-Axial Plot Example');
-legend({'Dataset 1', 'Dataset 2'}, 'Location', 'best');
+% Second figure: Gamma vs Temperature (pre and post combustion)
+figure;
+plot(data(1:combust,6), data(1:combust,7))
+hold on
+plot(data(combust+1:end,6), data(combust+1:end,7))
+xlabel('Temperature [K]');
+ylabel('Gamma [-]');
+title("Gamma vs Temperature")
+legend(["Pre-combustion" "Post-combustion"])
