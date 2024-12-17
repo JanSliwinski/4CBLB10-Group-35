@@ -107,26 +107,96 @@ disp("DeltaT = ")
 disp(deltaT)
 
 %% Find temperature where specific heat capacity becomes negative
-% Start at a high temperature
-T_test = 5000;
-cp_test = 5;
+% % Start at a high temperature
+% T_test = 5000;
+% cp_test = 5;
+% 
+% % Decrease temperature until cp becomes negative
+% while cp_test > 0
+%     cp_test = compute_cp(T_test,SpS,massComposition);
+%     T_test = T_test + 1;
+% end
+% 
+% % Compute cp at a temperature slightly below the negative cp point
+% cp_show = compute_cp(T_test-2000,SpS,massComposition);
+% 
+% % Display results of cp investigation
+% fprintf("c_p for T > %i is negative! = %f \n", T_test, cp_test);
+% fprintf("c_p for %i is %f \n", T_test-2000, cp_show);
 
-% Decrease temperature until cp becomes negative
-while cp_test > 0
-    cp_test = compute_cp(T_test,SpS,massComposition);
-    T_test = T_test + 1;
+%%
+% Load preprocessed data from a specific file
+data = load("./Data/Processed_session1/filtered_averaged_data_3.5_IMEP.txt");
+
+% Crop data from 180*5 to 180*15 indices (focus on specific crank angle range)
+data = data(180*5:180*15,:);
+
+% Ambient and gas constant parameters
+T_amb = 295;   % Ambient temperature [K]
+p_amb = 1e5;   % Ambient pressure [Pa]
+R_air = 287;   % Gas constant for air
+R_exhaust = 292;  % Gas constant for exhaust
+rho = 1.202;   % Air density
+mm = 0.001;    % Millimeter conversion
+
+% Engine Geometry Parameters
+Cyl.Bore = 104 * mm;               % Cylinder bore
+Cyl.Stroke = 85 * mm;              % Cylinder stroke
+Cyl.CompressionRatio = 21.5;       % Compression ratio
+Cyl.ConRod = 136.5 * mm;           % Connecting rod length
+Cyl.TDCangle = 180;                % Top Dead Center angle
+
+% Calculate cylinder volume using CylinderVolume function
+data(:,5) = CylinderVolume(data(:,1),Cyl);
+
+% Find maximum pressure and combustion point
+[maxP,combust] = max(data(:,2));
+
+% Calculate initial air mass
+m_air = data(1,2)*1e5 * data(1,5) / (R_air * T_amb);
+
+% Temperature and gamma calculation loop
+for dummy = 1:size(data,1)
+    % Pre-combustion calculations
+    if dummy <= combust
+        % Calculate temperature using ideal gas law
+        data(dummy,6) = data(dummy,2)*1e5 * data(dummy,5) / (R_air * m_air);
+        
+        % Calculate specific heat ratio (gamma)
+        data(dummy,7) = compute_cp(data(dummy,6),SpS,massComposition) ...
+            / (compute_cp(data(dummy,6),SpS,massComposition) - R_air);
+    
+    % Post-combustion calculations
+    else
+        % Calculate temperature using exhaust gas properties
+        data(dummy,6) = data(dummy,2)*1e5 * data(dummy,5) / (R_exhaust * m_air);
+        
+        % Calculate specific heat ratio (gamma)
+        data(dummy,7) = compute_cp(data(dummy,6),SpS,massComposition) ...
+            / (compute_cp(data(dummy,6),SpS,massComposition) - R_exhaust);
+    end
 end
 
-% Compute cp at a temperature slightly below the negative cp point
-cp_show = compute_cp(T_test-2000,SpS,massComposition);
+% First figure: Temperature and Gamma vs Crank Angle
+figure;
+yyaxis left
+plot(data(:,1), data(:,6), '-b', 'LineWidth', 1);
+ylabel('Temperature [K]');
+xlabel('CA [deg]');
+grid on;
 
-% Display results of cp investigation
-fprintf("c_p for T > %i is negative! = %f \n", T_test, cp_test);
-fprintf("c_p for %i is %f \n", T_test-2000, cp_show);
+yyaxis right
+plot(data(:,1), data(:,7), 'r', 'LineWidth', 1);
+ylabel('Gamma [-]');
+title('Temperature and Gamma vs Crank Angle');
+legend({'Temperature', 'Gamma'}, 'Location', 'best');
 
-%% Compute heat capacity ratio (gamma)
-% Calculate ratio of cp to cv at maximum combustion temperature
-gamma = compute_cp(T,SpS,massComposition) / compute_cv(T,SpS,massComposition);
-
-% Display heat capacity ratio
-fprintf("Gamma for combustion is equal to %f",gamma);
+% Second figure: Gamma vs Temperature (pre and post combustion)
+figure;
+plot(data(1:combust,6), data(1:combust,7))
+hold on
+plot(data(combust+1:end,6), data(combust+1:end,7))
+xlabel('Temperature [K]');
+ylabel('Gamma [-]');
+title("Gamma vs Temperature")
+legend(["Pre-combustion" "Post-combustion"])
