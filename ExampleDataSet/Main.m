@@ -152,6 +152,7 @@ fprintf('Injection ends at %.2f° CA\n', injection_end_ca);
 figure;
 set(gcf, 'Position', [200, 800, 1200, 400]);
 
+% Plot the average sensor current
 plot(Ca(:, 1), S_current_avg, 'LineWidth', 1.5);
 xlabel('Crank Angle (°)');
 ylabel('Sensor Current (A)');
@@ -159,13 +160,8 @@ title('Average Sensor Current vs. Crank Angle');
 grid on;
 xlim([-25, 25]);
 
-% Highlight injection duration
-hold on;
-YLIM = ylim;
-fill([injection_start_ca injection_end_ca injection_end_ca injection_start_ca], ...
-     [YLIM(1) YLIM(1) YLIM(2) YLIM(2)], [0.9 0.9 0.9], 'EdgeColor', 'none', 'FaceAlpha', 0.3);
-
 % Add markers for injection start and end
+hold on;
 plot(injection_start_ca, S_current_avg(injection_start_idx), 'ro', 'MarkerSize', 8, 'LineWidth', 2);
 plot(injection_end_ca, S_current_avg(injection_end_idx), 'ro', 'MarkerSize', 8, 'LineWidth', 2);
 
