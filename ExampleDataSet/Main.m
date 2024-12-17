@@ -127,11 +127,11 @@ lambda_CA = table2experiment1{:, 7};    % Lambda
 % Average sensor current across all cycles
 S_current_avg = mean(S_current, 2);
 
-% Define a baseline current (assuming the lowest value represents no injection)
+% Define a baseline current
 baseline_current = min(S_current_avg);
 
-% Define a threshold above the baseline to detect injection (adjust as needed)
-threshold = baseline_current + 0.2;  % Example threshold, modify based on your data
+% Define a threshold above the baseline to detect injection
+threshold = baseline_current + 0.2;
 
 % Find indices where the sensor current exceeds the threshold
 injection_indices = find(S_current_avg > threshold);

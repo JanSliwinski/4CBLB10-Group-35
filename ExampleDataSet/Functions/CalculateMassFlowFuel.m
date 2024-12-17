@@ -2,9 +2,9 @@ function true_mass_flow = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, th
 %% Function to calculate the true mass flow rate during the injection period
 %
 % Inputs:
-%   - mfr_fuel: Matrix of fuel mass flow rates (rows = data points, columns = cycles)
-%   - S_current: Matrix of sensor current (rows = data points, columns = cycles)
-%   - Ca: Matrix of crank angles (rows = data points, columns = cycles)
+%   - mfr_fuel: Matrix of fuel mass flow rates 
+%   - S_current: Matrix of sensor current 
+%   - Ca: Matrix of crank angles 
 %   - RPM: Engine speed in revolutions per minute
 %   - threshold: Sensor current threshold to detect injection start and end
 %
@@ -42,7 +42,7 @@ function true_mass_flow = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, th
         % Calculate the injection duration in seconds
         injection_duration = (injection_end_idx - injection_start_idx + 1) * time_per_step;
 
-        % Calculate the total mass injected per cycle (assuming mfr_fuel is in g/s)
+        % Calculate the total mass injected per cycle
         total_mass_injected = sum(mfr_fuel_cycle(injection_start_idx:injection_end_idx)) * time_per_step; % Total mass injected in g
 
         % Calculate the true mass flow rate during injection
