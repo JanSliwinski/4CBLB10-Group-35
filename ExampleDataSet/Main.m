@@ -47,9 +47,9 @@ ValveEvents.CaEVC = -344;
 ValveEvents.CaSOI = -3.2;  % Start of Injection
 
 %% Process experimental data
-folderpath = './ExampleDataSet/Data/session2_Raw/load3.5'; % path to raw data
-outputfilePath = './ExampleDataSet/Data/processed_Data_experiment1_load3.5.txt'; % path to output file
-% averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
+folderpath = './ExampleDataSet/Data/session1_Raw/load5'; % path to raw data
+outputfilePath = './ExampleDataSet/Data/processed_Data_experiment1_load5.txt'; % path to output file
+averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
 
 %% Load and Reshape Data
 dataFileName = fullfile('Data' , 'processed_Data_experiment1_load3.5.txt');
@@ -121,6 +121,63 @@ CO2_percent_CA = table2experiment1{:, 5}; % CO2%
 O2_percent_CA = table2experiment1{:, 6}; % O2%
 lambda_CA = table2experiment1{:, 7};    % Lambda
 
+
+%% Detect Start and End of Injection from Sensor Current
+
+% Average sensor current across all cycles
+S_current_avg = mean(S_current, 2);
+
+% Define a baseline current (assuming the lowest value represents no injection)
+baseline_current = min(S_current_avg);
+
+% Define a threshold above the baseline to detect injection (adjust as needed)
+threshold = baseline_current + 0.2;  % Example threshold, modify based on your data
+
+% Find indices where the sensor current exceeds the threshold
+injection_indices = find(S_current_avg > threshold);
+
+% Determine the start and end indices of injection
+injection_start_idx = injection_indices(1);
+injection_end_idx = injection_indices(end);
+
+% Find the corresponding crank angles
+injection_start_ca = Ca(injection_start_idx, 1);
+injection_end_ca = Ca(injection_end_idx, 1);
+
+% Display the results
+fprintf('Injection starts at %.2f° CA\n', injection_start_ca);
+fprintf('Injection ends at %.2f° CA\n', injection_end_ca);
+
+%% Plot Average Sensor Current with Injection Markers
+figure;
+set(gcf, 'Position', [200, 800, 1200, 400]);
+
+plot(Ca(:, 1), S_current_avg, 'LineWidth', 1.5);
+xlabel('Crank Angle (°)');
+ylabel('Sensor Current (A)');
+title('Average Sensor Current vs. Crank Angle');
+grid on;
+xlim([-25, 25]);
+
+% Highlight injection duration
+hold on;
+YLIM = ylim;
+fill([injection_start_ca injection_end_ca injection_end_ca injection_start_ca], ...
+     [YLIM(1) YLIM(1) YLIM(2) YLIM(2)], [0.9 0.9 0.9], 'EdgeColor', 'none', 'FaceAlpha', 0.3);
+
+% Add markers for injection start and end
+plot(injection_start_ca, S_current_avg(injection_start_idx), 'ro', 'MarkerSize', 8, 'LineWidth', 2);
+plot(injection_end_ca, S_current_avg(injection_end_idx), 'ro', 'MarkerSize', 8, 'LineWidth', 2);
+
+% Annotate the start and end points
+text(injection_start_ca, S_current_avg(injection_start_idx), sprintf('Start: %.2f°', injection_start_ca), ...
+     'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 10);
+text(injection_end_ca, S_current_avg(injection_end_idx), sprintf('End: %.2f°', injection_end_ca), ...
+     'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'FontSize', 10);
+
+hold off;
+
+true_mass_flow = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, threshold);
 
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
