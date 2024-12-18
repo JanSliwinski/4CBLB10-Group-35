@@ -18,7 +18,19 @@ M_diesel = 167; % Molar mass (g/mol)
 M_HVO = 226; % Molar mass (g/mol)
 Density_HVO = 0.78;
 Density_Diesel = 0.85;
+%% Making Path for files of different blends
 
+% Format: data file, fuel, crank angle
+HVO50_raw_dataFiles = {
+        fullfile('Data', 'session2_Raw', '20241212_0000002_HVO50_secondexperiment_CA14.txt'), 'HVO50', 14;
+        fullfile('Data', 'session2_Raw', '20241212_0000008_HVO50_secondexperiment_CA15.txt'), 'HVO50', 15;
+        fullfile('Data', 'session2_Raw', '20241212_0000003_HVO50_secondexperiment_CA16.txt'), 'HVO50', 16;
+        fullfile('Data', 'session2_Raw', '20241212_0000004_HVO50_secondexperiment_CA17.txt'), 'HVO50', 17;
+        fullfile('Data', 'session2_Raw', '20241212_0000005_HVO50_secondexperiment_CA18.txt'), 'HVO50', 18;
+        fullfile('Data', 'session2_Raw', '20241212_0000009_HVO50_secondexperiment_CA19.txt'), 'HVO50', 19;
+        fullfile('Data', 'session2_Raw', '20241212_0000006_HVO50_secondexperiment_CA20.txt'), 'HVO50', 20;
+
+    };
 %% Define Fuel used
 fuel_name = 'Diesel';
 LHV = 43e3; %Lower heating value given in the project guide for Diesel B7 J/g
@@ -47,8 +59,8 @@ ValveEvents.CaEVC = -344;
 ValveEvents.CaSOI = -3.2;  % Start of Injection
 
 %% Process experimental data
-folderpath = './ExampleDataSet/Data/session1_Raw/load5'; % path to raw data
-outputfilePath = './ExampleDataSet/Data/processed_Data_experiment1_load5.txt'; % path to output file
+folderpath = '/Users/maxgp/Applications/MatLab/4CBLB10-Group-35/ExampleDataSet/Data/session1_Raw/load5'; % path to raw data
+outputfilePath = '/Users/maxgp/Applications/MatLab/4CBLB10-Group-35/ExampleDataSet/Data/processed_Data_experiment1_load5.txt'; % path to output file
 averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
 
 %% Load and Reshape Data
@@ -298,23 +310,12 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 % KPI data
 % Format: data file, fuel, crank angle
 
-KPIdataFiles = {
-        fullfile('Data', 'session2_Raw', '20241212_0000002_HVO50_secondexperiment_CA14.txt'), 'HVO50', 14;
-        fullfile('Data', 'session2_Raw', '20241212_0000008_HVO50_secondexperiment_CA15.txt'), 'HVO50', 15;
-        fullfile('Data', 'session2_Raw', '20241212_0000003_HVO50_secondexperiment_CA16.txt'), 'HVO50', 16;
-        fullfile('Data', 'session2_Raw', '20241212_0000004_HVO50_secondexperiment_CA17.txt'), 'HVO50', 17;
-        fullfile('Data', 'session2_Raw', '20241212_0000005_HVO50_secondexperiment_CA18.txt'), 'HVO50', 18;
-        fullfile('Data', 'session2_Raw', '20241212_0000009_HVO50_secondexperiment_CA19.txt'), 'HVO50', 19;
-        fullfile('Data', 'session2_Raw', '20241212_0000006_HVO50_secondexperiment_CA20.txt'), 'HVO50', 20;
-
-    };
-
 % The selected fuel
 M_fuel = M_diesel;
 
  %Generate KPI table
-KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, M_fuel,Cyl);
-disp(KPITable)
+%KPITable = GenerateKPITable(HVO50_raw_dataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, M_fuel,Cyl);
+%disp(KPITable)
 
 %% Rate of changes, Pressure and Volume
 % Crank angle change per data point
@@ -322,6 +323,7 @@ dCA = resolution;
 
 % Pressure change per data point
 dp = diff(p_filtered_avg);
+
 % Pressure change per Crank angle
 dp_dCA = dp/dCA;
 
@@ -331,7 +333,67 @@ dV = diff(V_avg);
 dV_dCA = dV/dCA;
 
 %% Calculate aROHR
- 
+
+%% Calculate and Plot aROHR for All HVO50 Files
+disp(size(p));
+% Initialization
+figure;
+hold on;
+colors = lines(size(HVO50_raw_dataFiles, 1)); 
+disp(size(p_avg));
+disp(size(p_filtered_avg))
+disp(size(dp_dCA))
+% Loop through each file
+for i = 1:size(HVO50_raw_dataFiles, 1)
+    % Extracting file information
+    filePath = HVO50_raw_dataFiles{i, 1};
+    crankAngle = HVO50_raw_dataFiles{i, 3};
+
+    % Load and preprocess data
+    data = table2array(readtable(filePath)); 
+    Ca = reshape(data(:, 1), [], Ncycles);      
+    %pressure
+    p = reshape(data(:, 2), [], Ncycles) * bara;  % Pressure in Pa
+    p_filtered = zeros(size(p));
+   
+    for j = 1:Ncycles
+        p_filtered(:, j) = SGFilter(p(:, j), polynomialOrder, frameLength, 0);
+    end
+
+
+    p_filtered_avg = mean(p_filtered, 2);
+    dp_dCA = diff(p_filtered_avg) / resolution; 
+    dV_dCA = diff(V_avg) / resolution; 
+    % Calculate aROHR
+    aROHR_result = aROHR(p_filtered_avg, V_avg, resolution, gamma, dp_dCA, dV_dCA);
+
+    % Plot results
+    plot(Ca(:, 1), aROHR_result, 'LineWidth', 1.5, 'Color', colors(i, :), ...
+        'DisplayName', sprintf('File %d (CA = %d°)', i, crankAngle));
+    
+end
+
+% Finalize plot
+xlabel('Crank Angle (°)');
+ylabel('Apparent Rate of Heat Release [J/°]');
+title('aROHR for All HVO50 Files');
+legend('show');
+grid on;
+xlim([-45, 135]); % Adjust crank angle range as needed
+hold off;
+
+
+
+
+
+
+
+
+
+
+
+
+
 aROHR_avg = aROHR(p_filtered_avg, V_avg, resolution, gamma, dp_dCA, dV_dCA);
 
 % Plot the apparent Rate of Heat Release
