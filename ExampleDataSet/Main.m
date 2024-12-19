@@ -2,7 +2,7 @@ warning off
 %% Initialization
 clear; clc; close all;
 %addpath("Functions", "Nasa");  % Add necessary paths
-
+figure('Visible', 'on');
 %% Units and Constants
 mm = 1e-3;
 dm = 0.1;
@@ -31,6 +31,28 @@ HVO50_raw_dataFiles = {
         fullfile('Data', 'session2_Raw', '20241212_0000006_HVO50_secondexperiment_CA20.txt'), 'HVO50', 20;
 
     };
+
+
+Processed_session1_files = {
+    fullfile('Data', 'processed_session1', '15CA_filtered_averaged.txt'), 'Diesel', 15;
+    fullfile('Data', 'processed_session1', '16CA_filtered_averaged.txt'), 'Diesel', 16;
+    fullfile('Data', 'processed_session1', '17CA_filtered_averaged.txt'), 'Diesel', 17;
+    fullfile('Data', 'processed_session1', '18CA_filtered_averaged.txt'), 'Diesel', 18;
+    fullfile('Data', 'processed_session1', '19CA_filtered_averaged.txt'), 'Diesel', 19;
+    fullfile('Data', 'processed_session1', '20CA_filtered_averaged.txt'), 'Diesel', 20;
+    fullfile('Data', 'processed_session1', '21CA_filtered_averaged.txt'), 'Diesel', 21;
+};
+
+session1_Raw_files = {
+    fullfile('Data', 'session1_Raw', '20241125_0000010_15CA.txt'), 'Diesel', 15;
+    fullfile('Data', 'session1_Raw', '20241125_0000014_16CA.txt'), 'Diesel', 16;
+    fullfile('Data', 'session1_Raw', '20241125_0000016_17CA.txt'), 'Diesel', 17;
+    fullfile('Data', 'session1_Raw', '20241125_0000013_18CA.txt'), 'Diesel', 18;
+    fullfile('Data', 'session1_Raw', '20241125_0000011_19CA.txt'), 'Diesel', 19;
+    fullfile('Data', 'session1_Raw', '20241125_0000012_20CA.txt'), 'Diesel', 20;
+    fullfile('Data', 'session1_Raw', '20241125_0000018_21CA.txt'), 'Diesel', 21;
+};
+
 %% Define Fuel used
 fuel_name = 'Diesel';
 LHV = 43e3; %Lower heating value given in the project guide for Diesel B7 J/g
@@ -339,38 +361,37 @@ disp(size(p));
 % Initialization
 figure;
 hold on;
-colors = lines(size(HVO50_raw_dataFiles, 1)); 
-disp(size(p_avg));
-disp(size(p_filtered_avg))
-disp(size(dp_dCA))
+colors = lines(size(session1_Raw_files, 1)); 
 % Loop through each file
-for i = 1:size(HVO50_raw_dataFiles, 1)
+for i = 1:size(session1_Raw_files, 1)
     % Extracting file information
-    filePath = HVO50_raw_dataFiles{i, 1};
-    crankAngle = HVO50_raw_dataFiles{i, 3};
+    filePath = session1_Raw_files{i, 1};
+    crankAngle = session1_Raw_files{i, 3};
 
     % Load and preprocess data
     data = table2array(readtable(filePath)); 
     Ca = reshape(data(:, 1), [], Ncycles);      
     %pressure
-    p = reshape(data(:, 2), [], Ncycles) * bara;  % Pressure in Pa
+    p = reshape(data(:, 2), [], Ncycles) * bara;  
     p_filtered = zeros(size(p));
    
     for j = 1:Ncycles
         p_filtered(:, j) = SGFilter(p(:, j), polynomialOrder, frameLength, 0);
     end
 
-
     p_filtered_avg = mean(p_filtered, 2);
     dp_dCA = diff(p_filtered_avg) / resolution; 
     dV_dCA = diff(V_avg) / resolution; 
     % Calculate aROHR
     aROHR_result = aROHR(p_filtered_avg, V_avg, resolution, gamma, dp_dCA, dV_dCA);
+    % Calculate aHR
+    aHR_result = aHR(aROHR_result, resolution); 
+
+    % Store the results
+    aHR_all{i} = aHR_result; % Store aHR for each file
 
     % Plot results
-    plot(Ca(:, 1), aROHR_result, 'LineWidth', 1.5, 'Color', colors(i, :), ...
-        'DisplayName', sprintf('File %d (CA = %d°)', i, crankAngle));
-    
+    plot(Ca(:, 1), aROHR_result , 'LineWidth', 1.5, 'Color', colors(i, :), 'DisplayName', sprintf('(CA = %d°)', crankAngle));
 end
 
 % Finalize plot
@@ -379,75 +400,70 @@ ylabel('Apparent Rate of Heat Release [J/°]');
 title('aROHR for All HVO50 Files');
 legend('show');
 grid on;
-xlim([-45, 135]); % Adjust crank angle range as needed
+xlim([-45, 135]); 
+hold off;
+
+% Plot aHR for all files
+figure;
+hold on;
+crank_angles = 15:21;
+for i = 1:length(aHR_all)
+
+    plot(Ca(:, 1), aHR_all{i}, 'LineWidth', 1.5, 'Color', colors(i, :), ...
+        'DisplayName', sprintf('CA %d', crank_angles(i)));
+end
+xlabel('Crank Angle (°)');
+ylabel('Apparent Heat Release [J]');
+title('aHR for All Files');
+legend('show');
+grid on;
+xlim([-45, 135]);
 hold off;
 
 
+% %% Calculate Apparent Heat Release
+% aHR_avg = aHR(aROHR_avg, resolution);  % Assuming aHR function is already defined
 
-
-
-
-
-
-
-
-
-
-
-aROHR_avg = aROHR(p_filtered_avg, V_avg, resolution, gamma, dp_dCA, dV_dCA);
-
-% Plot the apparent Rate of Heat Release
-figure;
-plot(Ca(:, 1), aROHR_avg, 'LineWidth', 1.5);
-xlabel('Crank Angle (°)');
-ylabel('Apparent Rate of Heat Release [J/°]');
-title('Apparent Rate of Heat Release (Average)');
-xlim([-35,135])
-grid on;
-
-%% Calculate Apparent Heat Release
-aHR_avg = aHR(aROHR_avg, resolution);  % Assuming aHR function is already defined
-
-% Plot the Apparent Heat Release
-figure;
-plot(Ca(:, 1), aHR_avg, 'LineWidth', 1.5);  % Ca(:,1) is the crank angle array
-xlabel('Crank Angle (°)');
-ylabel('Apparent Heat Release [J]');
-title('Apparent Heat Release (Average)');
-xlim([-45,135]);
-grid on;
-hold on;
-
-% Determine the Maximum Value and Its Index
-[max_aHR, max_idx] = max(aHR_avg);  % Find the max value and its index
-
-% Calculate 10%, 50%, and 90% of Maximum Value
-val_10 = 0.1 * max_aHR;  % 10% of max
-val_50 = 0.5 * max_aHR;  % 50% of max
-val_90 = 0.9 * max_aHR;  % 90% of max
-
-% Find Crank Angles Before the Peak
-% Use only the range before and including the peak for interpolation
-crank_angle_pre_peak = Ca(1:max_idx, 1);  % Crank angles up to the peak
-aHR_pre_peak = aHR_avg(1:max_idx);       % aHR values up to the peak
-
-% Interpolate for the 10%, 50%, and 90% values
-crank_angle_10 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_10);
-crank_angle_50 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_50);
-crank_angle_90 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_90);
-
-% Plot the Updated Results
-% Highlight points with scatter
-scatter([crank_angle_10, crank_angle_50, crank_angle_90], ...
-        [val_10, val_50, val_90], 'r', 'filled');
-
-% Annotate the points
-text(crank_angle_10, val_10, sprintf('10%% (%.2f°)', crank_angle_10), ...
-    'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 10);
-text(crank_angle_50, val_50, sprintf('50%% (%.2f°)', crank_angle_50), ...
-    'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'FontSize', 10);
-text(crank_angle_90, val_90, sprintf('90%% (%.2f°)', crank_angle_90), ...
-    'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'FontSize', 10);
+% % Plot the Apparent Heat Release
+% figure;
+% plot(Ca(:, 1), aHR_avg, 'LineWidth', 1.5);  % Ca(:,1) is the crank angle array
+% xlabel('Crank Angle (°)');
+% ylabel('Apparent Heat Release [J]');
+% title('Apparent Heat Release (Average)');
+% xlim([-45,135]);
+% grid on;
+% hold on;
+% 
+% % Determine the Maximum Value and Its Index
+% [max_aHR, max_idx] = max(aHR_avg);  % Find the max value and its index
+% 
+% % Calculate 10%, 50%, and 90% of Maximum Value
+% val_10 = 0.1 * max_aHR;  % 10% of max
+% val_50 = 0.5 * max_aHR;  % 50% of max
+% val_90 = 0.9 * max_aHR;  % 90% of max
+% 
+% % Find Crank Angles Before the Peak
+% % Use only the range before and including the peak for interpolation
+% crank_angle_pre_peak = Ca(1:max_idx, 1);  % Crank angles up to the peak
+% aHR_pre_peak = aHR_avg(1:max_idx);       % aHR values up to the peak
+% 
+% % Interpolate for the 10%, 50%, and 90% values
+% crank_angle_10 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_10);
+% crank_angle_50 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_50);
+% crank_angle_90 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_90);
+% 
+% % Plot the Updated Results
+% % Highlight points with scatter
+% scatter([crank_angle_10, crank_angle_50, crank_angle_90], ...
+%         [val_10, val_50, val_90], 'r', 'filled');
+% 
+% % Annotate the points
+% text(crank_angle_10, val_10, sprintf('10%% (%.2f°)', crank_angle_10), ...
+%     'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 10);
+% text(crank_angle_50, val_50, sprintf('50%% (%.2f°)', crank_angle_50), ...
+%     'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'FontSize', 10);
+% text(crank_angle_90, val_90, sprintf('90%% (%.2f°)', crank_angle_90), ...
+%     'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'FontSize', 10);
 
 
 %% Plot pV Diagrams
