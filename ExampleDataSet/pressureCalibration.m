@@ -1,5 +1,5 @@
 % Specify location of the experimental file(s) and open them
-folderPath = './Data/session2_Raw';
+folderPath = './Data/session1_Raw';
 outputfilePath = './Data/Processed_session2';
 
 % If averaging data also, use this code:
@@ -35,7 +35,7 @@ for magic1 = 1:numFiles
         % Apply Savitzky-Golay filter
         for magic2 = 2:4
             column = data(:,magic2);
-            filtered = sgolayfilt(column, 2, 101); 
+            filtered = sgolayfilt(column, 2, 15); 
             data(:,magic2) = filtered;
         end
 
