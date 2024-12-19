@@ -1,9 +1,9 @@
 % Specify location of the experimental file(s) and open them
-folderPath = './Data/session1_Raw/load5';
-outputfilePath = './Data/Processed_session1';
+folderPath = './Data/session2_Raw';
+outputfilePath = './Data/Processed_session2';
 
 % If averaging data also, use this code:
-sumData = 0;
+% sumData = 0;
 
 % Create output directory if it doesn't exist
 if ~isfolder(outputfilePath)
@@ -58,20 +58,20 @@ for magic1 = 1:numFiles
 
 
         % Save filtered data
-        % [~, name, ext] = fileparts(fileList(magic1).name);
-        % outputFileName = fullfile(outputfilePath, [name, '_filtered', ext]);
-        % disp(['Saving to: ', outputFileName]);
-        % writematrix(data, outputFileName);
+        [~, name, ext] = fileparts(fileList(magic1).name);
+        outputFileName = fullfile(outputfilePath, [name, '_filtered', ext]);
+        disp(['Saving to: ', outputFileName]);
+        writematrix(data, outputFileName);
     catch ME
         warning('Error processing file %s: %s', fileList(magic1).name, ME.message);
     end
-    sumData = sumData + data;
+    % sumData = sumData + data;
 end
 
 
-averageData = sumData / numFiles;
-
-%% Save averaged data
-outputFileName = fullfile(outputfilePath, 'averaged_filtered_data_5_IMEP.txt');
-disp(['Saving averaged data to: ', outputFileName]);
-writematrix(averageData, outputFileName);
+% averageData = sumData / numFiles;
+% 
+% %% Save averaged data
+% outputFileName = fullfile(outputfilePath, 'averaged_filtered_data_5_IMEP.txt');
+% disp(['Saving averaged data to: ', outputFileName]);
+% writematrix(averageData, outputFileName);
