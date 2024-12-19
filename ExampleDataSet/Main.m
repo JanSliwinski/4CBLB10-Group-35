@@ -2,7 +2,7 @@ warning off
 %% Initialization
 clear; clc; close all;
 %addpath("Functions", "Nasa");  % Add necessary paths
-
+figure('Visible', 'on');
 %% Units and Constants
 mm = 1e-3;
 dm = 0.1;
@@ -31,6 +31,28 @@ HVO50_raw_dataFiles = {
         fullfile('Data', 'session2_Raw', '20241212_0000006_HVO50_secondexperiment_CA20.txt'), 'HVO50', 20;
 
     };
+
+
+Processed_session1_files = {
+    fullfile('Data', 'processed_session1', '15CA_filtered_averaged.txt'), 'Diesel', 15;
+    fullfile('Data', 'processed_session1', '16CA_filtered_averaged.txt'), 'Diesel', 16;
+    fullfile('Data', 'processed_session1', '17CA_filtered_averaged.txt'), 'Diesel', 17;
+    fullfile('Data', 'processed_session1', '18CA_filtered_averaged.txt'), 'Diesel', 18;
+    fullfile('Data', 'processed_session1', '19CA_filtered_averaged.txt'), 'Diesel', 19;
+    fullfile('Data', 'processed_session1', '20CA_filtered_averaged.txt'), 'Diesel', 20;
+    fullfile('Data', 'processed_session1', '21CA_filtered_averaged.txt'), 'Diesel', 21;
+};
+
+session1_Raw_files = {
+    fullfile('Data', 'session1_Raw', '20241125_0000010_15CA.txt'), 'Diesel', 15;
+    fullfile('Data', 'session1_Raw', '20241125_0000014_16CA.txt'), 'Diesel', 16;
+    fullfile('Data', 'session1_Raw', '20241125_0000016_17CA.txt'), 'Diesel', 17;
+    fullfile('Data', 'session1_Raw', '20241125_0000013_18CA.txt'), 'Diesel', 18;
+    fullfile('Data', 'session1_Raw', '20241125_0000011_19CA.txt'), 'Diesel', 19;
+    fullfile('Data', 'session1_Raw', '20241125_0000012_20CA.txt'), 'Diesel', 20;
+    fullfile('Data', 'session1_Raw', '20241125_0000018_21CA.txt'), 'Diesel', 21;
+};
+
 %% Define Fuel used
 fuel_name = 'Diesel';
 LHV = 43e3; %Lower heating value given in the project guide for Diesel B7 J/g
@@ -339,15 +361,12 @@ disp(size(p));
 % Initialization
 figure;
 hold on;
-colors = lines(size(HVO50_raw_dataFiles, 1)); 
-disp(size(p_avg));
-disp(size(p_filtered_avg))
-disp(size(dp_dCA))
+colors = lines(size(session1_Raw_files, 1)); 
 % Loop through each file
-for i = 1:size(HVO50_raw_dataFiles, 1)
+for i = 1:size(session1_Raw_files, 1)
     % Extracting file information
-    filePath = HVO50_raw_dataFiles{i, 1};
-    crankAngle = HVO50_raw_dataFiles{i, 3};
+    filePath = session1_Raw_files{i, 1};
+    crankAngle = session1_Raw_files{i, 3};
 
     % Load and preprocess data
     data = table2array(readtable(filePath)); 
@@ -360,7 +379,6 @@ for i = 1:size(HVO50_raw_dataFiles, 1)
         p_filtered(:, j) = SGFilter(p(:, j), polynomialOrder, frameLength, 0);
     end
 
-
     p_filtered_avg = mean(p_filtered, 2);
     dp_dCA = diff(p_filtered_avg) / resolution; 
     dV_dCA = diff(V_avg) / resolution; 
@@ -368,9 +386,7 @@ for i = 1:size(HVO50_raw_dataFiles, 1)
     aROHR_result = aROHR(p_filtered_avg, V_avg, resolution, gamma, dp_dCA, dV_dCA);
 
     % Plot results
-    plot(Ca(:, 1), aROHR_result, 'LineWidth', 1.5, 'Color', colors(i, :), ...
-        'DisplayName', sprintf('File %d (CA = %d°)', i, crankAngle));
-    
+    plot(Ca(:, 1), aROHR_result , 'LineWidth', 1.5, 'Color', colors(i, :), 'DisplayName', sprintf('File %d (CA = %d°)', i, crankAngle));
 end
 
 % Finalize plot
