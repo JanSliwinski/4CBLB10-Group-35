@@ -314,19 +314,19 @@ for rowIdx = 1:height(T)
 end
 fprintf('Completed applying Savitzky-Golay filter to all Pressure data.\n');
 
-%% ===== Added Section: Define Crank Angle Resolution and Cycle Parameters =====
+%% Define Crank Angle Resolution and Cycle Parameters
 resolution = 0.2;  % Degrees crank angle resolution
 NdatapointsPerCycle = 720 / resolution; % Number of data points per cycle
 
 fprintf('Defined crank angle resolution: %.1f degrees.\n', resolution);
 fprintf('Number of data points per cycle: %d.\n', NdatapointsPerCycle);
 
-%% ===== Added Section: Add AverageCycleData Column to Table =====
+%% Add AverageCycleData Column to Table 
 % Initialize the AverageCycleData column as a cell array
 T.AverageCycleData = cell(height(T), 1);
 fprintf('Added AverageCycleData column to the table.\n');
 
-%% ===== Added Section: Compute Average Cycle Data for Each Group =====
+%% Compute Average Cycle Data for Each Group 
 fprintf('Computing average cycle data for each group...\n');
 for rowIdx = 1:height(T)
     % Retrieve all ExperimentData matrices and their corresponding filtered pressures
@@ -396,7 +396,6 @@ for rowIdx = 1:height(T)
 end
 fprintf('Completed computing average cycle data for all groups.\n');
 
-%% ===== End of Added Section =====
 
 %% Display the Table
 disp('Integrated Data Table:');

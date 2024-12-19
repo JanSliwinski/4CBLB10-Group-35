@@ -19,12 +19,6 @@ Cyl.CompressionRatio = 21.5;
 Cyl.ConRod = 136.5; % mm
 Cyl.TDCangle = 180; % degrees
 
-
-%% Define CylinderVolume Function
-% This function calculates the cylinder volume based on crank angle and cylinder parameters.
-% Volume is calculated using the standard formula for a reciprocating engine.
-
-
 %% Define Crank Angle Resolution and Cycle Parameters
 resolution = 0.2;  % Degrees crank angle resolution
 NdatapointsPerCycle = floor(720 / resolution); % Number of data points per cycle
