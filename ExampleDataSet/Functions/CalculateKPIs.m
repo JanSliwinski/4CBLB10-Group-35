@@ -1,8 +1,6 @@
-function KPIs = CalculateKPIs(W, mfr_fuel, avg_m_fuelpercycle, LHV, P, x, mfr_air, NOx_ppm, MW_Fuel)
+function KPIs = CalculateKPIs(true_mfr_fuel, LHV, P, x, mfr_air, NOx_ppm, MW_Fuel)
     % Inputs:
-    %   W                  : Work done Vector with each CA (J) - Not used directly here
-    %   mfr_fuel           : Fuel mass flow rate (kg/s)
-    %   avg_m_fuelpercycle : Mass of the fuel per cycle (g) - Not used directly here
+    %   true_mfr_fuel      : Fuel mass flow rate (kg/s)
     %   LHV                : Lower heating value of the fuel (J/kg)
     %   P                  : Power output (W)
     %   x                  : Number of carbon atoms in the fuel (CxHy)
@@ -39,12 +37,11 @@ function KPIs = CalculateKPIs(W, mfr_fuel, avg_m_fuelpercycle, LHV, P, x, mfr_ai
 
     % Efficiency
     % Check reference factor (0.16) as needed
-    KPIs.Efficiency = P / (0.16 * LHV);
+    KPIs.Efficiency = P / (true_mfr_fuel * LHV);
 
     % Brake-Specific Fuel Consumption (BSFC)
-    % (mfr_fuel [kg/s]*3600 [s/h])/(P [W]/1000 [kW]) = kg/kWh
-    % Multiply by 1000 to convert to g/kWh
-    KPIs.BSFC = ((mfr_fuel * 3600) / (P / 1000)) * 1000;
+    % (true_mfr_fuel [g/s]*3600 [s/h])/(P [W]/1000 [kW]) = g/kWh
+    KPIs.BSFC = ((true_mfr_fuel * 3600) / (P / 1000));
 
     % Brake-Specific CO2 Emissions
     % bsCO2 = ((x * MW_CO2)/MW_Fuel)*BSFC
@@ -55,13 +52,12 @@ function KPIs = CalculateKPIs(W, mfr_fuel, avg_m_fuelpercycle, LHV, P, x, mfr_ai
     NOx_mass_fraction = NOx_frac * (MW_NOx / M_exhaust);
 
     % Total exhaust mass flow (approx. sum of air and fuel)
-    mfr_exhaust = mfr_air + mfr_fuel;
+    mfr_exhaust = mfr_air + true_mfr_fuel;
 
     % NOx mass flow (kg/s)
     mfr_NOx = NOx_mass_fraction * mfr_exhaust;
 
     % Convert NOx mass flow to g/kWh
-    % (mfr_NOx [kg/s]*3600 [s/h])/(P [W]/1000 [kW]) = kg/kWh
-    % *1000 to get g/kWh
-    KPIs.bsNOx = ((mfr_NOx * 3600) / (P / 1000)) * 1000;
+    % (mfr_NOx [g/s]*3600 [s/h])/(P [W]/1000 [kW]) = g/kWh
+    KPIs.bsNOx = ((mfr_NOx * 3600) / (P / 1000));
 end
