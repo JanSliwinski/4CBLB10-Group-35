@@ -406,9 +406,11 @@ hold off;
 % Plot aHR for all files
 figure;
 hold on;
+crank_angles = 15:21;
 for i = 1:length(aHR_all)
+
     plot(Ca(:, 1), aHR_all{i}, 'LineWidth', 1.5, 'Color', colors(i, :), ...
-        'DisplayName', sprintf('CA %d', crankAngle));
+        'DisplayName', sprintf('CA %d', crank_angles(i)));
 end
 xlabel('Crank Angle (°)');
 ylabel('Apparent Heat Release [J]');
