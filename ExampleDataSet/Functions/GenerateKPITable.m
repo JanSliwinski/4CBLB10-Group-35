@@ -92,5 +92,5 @@ function KPITable = GenerateKPITable(KPIdataFiles, true_mfr_fuel, table2_experim
         % Populate the i-th row of KPITable
         KPITable(i, :) = {fuel_type, crank_angle, W, KPIs.Efficiency, KPIs.BSFC, KPIs.bsCO2, KPIs.bsNOx};
     end
-
+disp(mfr_air)
 end

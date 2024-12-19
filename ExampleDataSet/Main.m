@@ -297,11 +297,9 @@ fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
 stoich_coeffs.fuel
 reaction_eq
 %% Calculate mass flow of air:
-avg_O2_load35 = mean(O2_percent_load(4:6));  % Load relevant exhaust data from processed excel
-O2_percent_vector = avg_O2_load35 * size(1, 100); %set the correct size for the input
-mfr_air = CalculateMassFlowAir(O2_percent_vector, true_mfr_fuel, AFR_stoich);
-disp("The mass flow of air is: %6f g/s \n ", mfr_air)
-
+O2_percent = mean(O2_percent_load(4:6));  % Load relevant exhaust data from processed excel
+mfr_air = CalculateMassFlowAir(O2_percent, true_mfr_fuel, AFR_stoich);
+fprintf('Mass flow rate for air: %.6f g/s\n', mfr_air)
 %% Calculate Cp and gamma
 % [cp, gamma] = calc_cp_gamma(LHV, mfr_fuel, mfr_air);
 
