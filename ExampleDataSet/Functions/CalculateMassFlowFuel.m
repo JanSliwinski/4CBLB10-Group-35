@@ -1,4 +1,4 @@
-function true_mass_flow = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, threshold)
+function true_mfr_fuel = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, threshold)
 %% Function to calculate the true mass flow rate during the injection period
 %
 % Inputs:
@@ -9,13 +9,13 @@ function true_mass_flow = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, th
 %   - threshold: Sensor current threshold to detect injection start and end
 %
 % Output:
-%   - true_mass_flow: True mass flow rate during the injection period (g/s)
+%   - true_mfr_fuel: True mass flow rate during the injection period (g/s)
 
     % Number of cycles
     Ncycles = size(mfr_fuel, 2);
 
     % Initialize an array to store the true mass flow rates for each cycle
-    true_mass_flow_per_cycle = zeros(Ncycles, 1);
+    true_mfr_fuel_per_cycle = zeros(Ncycles, 1);
 
     % Calculate the time per crank angle step (in seconds)
     time_per_cycle = 2 * (60 / RPM);  % Time for one full engine cycle (720°) in seconds
@@ -46,12 +46,12 @@ function true_mass_flow = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, th
         total_mass_injected = sum(mfr_fuel_cycle(injection_start_idx:injection_end_idx)) * time_per_step; % Total mass injected in g
 
         % Calculate the true mass flow rate during injection
-        true_mass_flow_per_cycle(i) = total_mass_injected / injection_duration;
+        true_mfr_fuel_per_cycle(i) = total_mass_injected / injection_duration;
     end
 
     % Calculate the overall average true mass flow rate across all cycles
-    true_mass_flow = mean(true_mass_flow_per_cycle, 'omitnan');
+    true_mfr_fuel = mean(true_mfr_fuel_per_cycle, 'omitnan');
 
     % Display the result
-    fprintf('True mass flow rate during injection: %.6f g/s\n', true_mass_flow);
+    fprintf('True mass flow rate during injection: %.6f g/s\n', true_mfr_fuel);
 end

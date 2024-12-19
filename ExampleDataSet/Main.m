@@ -32,6 +32,16 @@ HVO50_raw_dataFiles = {
 
     };
 
+HVO60_raw_dataFiles = {
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI14.txt'), 'HVO60', 14;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI15.txt'), 'HVO60', 15;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI16.txt'), 'HVO60', 16;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI17.txt'), 'HVO60', 17;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI18.txt'), 'HVO60', 18;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI19.txt'), 'HVO60', 19;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI20.txt'), 'HVO60', 20;
+
+    };
 
 Processed_session1_files = {
     fullfile('Data', 'processed_session1', '15CA_filtered_averaged.txt'), 'Diesel', 15;
@@ -81,8 +91,8 @@ ValveEvents.CaEVC = -344;
 ValveEvents.CaSOI = -3.2;  % Start of Injection
 
 %% Process experimental data
-folderpath = '/Users/maxgp/Applications/MatLab/4CBLB10-Group-35/ExampleDataSet/Data/session1_Raw/load5'; % path to raw data
-outputfilePath = '/Users/maxgp/Applications/MatLab/4CBLB10-Group-35/ExampleDataSet/Data/processed_Data_experiment1_load5.txt'; % path to output file
+folderpath = 'ExampleDataSet/Data/session1_Raw/load5'; % path to raw data
+outputfilePath = 'ExampleDataSet/Data/processed_Data_experiment1_load5.txt'; % path to output file
 averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
 
 %% Load and Reshape Data
@@ -126,7 +136,7 @@ disp('Data filtered and reshaped into cycles');
 
 %% load the excelfile
 fileName = fullfile('Data', 'Session2.xlsx');
-sheetName = 'Sheet1';
+sheetName = 'Sheet2';
 range1 = 'A8:G16'; % Table 1 range
 range2 = 'A22:G28'; % Table 2 range
 
@@ -207,7 +217,7 @@ text(injection_end_ca, S_current_avg(injection_end_idx), sprintf('End: %.2f°', 
 
 hold off;
 
-true_mass_flow = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, threshold);
+true_mfr_fuel = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, threshold);
 
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
@@ -289,7 +299,8 @@ reaction_eq
 %% Calculate mass flow of air:
 avg_O2_load35 = mean(O2_percent_load(4:6));  % Load relevant exhaust data from processed excel
 O2_percent_vector = avg_O2_load35 * size(1, 100); %set the correct size for the input
-mfr_air = CalculateMassFlowAir(O2_percent_vector, mfr_fuel, AFR_stoich);
+mfr_air = CalculateMassFlowAir(O2_percent_vector, true_mfr_fuel, AFR_stoich);
+disp("The mass flow of air is: %6f g/s \n ", mfr_air)
 
 %% Calculate Cp and gamma
 % [cp, gamma] = calc_cp_gamma(LHV, mfr_fuel, mfr_air);
@@ -333,11 +344,11 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 % Format: data file, fuel, crank angle
 
 % The selected fuel
-M_fuel = M_diesel;
-
- %Generate KPI table
-%KPITable = GenerateKPITable(HVO50_raw_dataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, M_fuel,Cyl);
-%disp(KPITable)
+MW_fuel = M_HVO;
+KPIdataFiles = HVO60_raw_dataFiles;
+% Generate KPI table
+KPITable = GenerateKPITable(KPIdataFiles, true_mfr_fuel, table2experiment1, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl);
+disp(KPITable)
 
 %% Rate of changes, Pressure and Volume
 % Crank angle change per data point
