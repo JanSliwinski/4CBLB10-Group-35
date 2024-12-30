@@ -295,7 +295,6 @@ fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
 %% Stoichiometric calculations
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
 stoich_coeffs.fuel
-reaction_eq
 %% Calculate mass flow of air:
 O2_percent = mean(O2_percent_load(4:6));  % Load relevant exhaust data from processed excel
 mfr_air = CalculateMassFlowAir(O2_percent, true_mfr_fuel, AFR_stoich);
@@ -348,86 +347,6 @@ KPIdataFiles = HVO60_raw_dataFiles;
 KPITable = GenerateKPITable(KPIdataFiles, true_mfr_fuel, table2experiment1, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl);
 disp(KPITable)
 
-%% Rate of changes, Pressure and Volume
-% Crank angle change per data point
-dCA = resolution;
-
-% Pressure change per data point
-dp = diff(p_filtered_avg);
-
-% Pressure change per Crank angle
-dp_dCA = dp/dCA;
-
-% Volume change per data point
-dV = diff(V_avg);
-% Volume change per Crank angle
-dV_dCA = dV/dCA;
-
-%% Calculate aROHR
-
-%% Calculate and Plot aROHR for All HVO50 Files
-disp(size(p));
-% Initialization
-figure;
-hold on;
-colors = lines(height(T)); 
-% Loop through each file
-for i = 1:size(session1_Raw_files, 1)
-    % Extracting file information
-    filePath = session1_Raw_files{i, 1};
-    crankAngle = session1_Raw_files{i, 3};
-
-    % Load and preprocess data
-    data = table2array(readtable(filePath)); 
-    Ca = reshape(data(:, 1), [], Ncycles);      
-    %pressure
-    p = reshape(data(:, 2), [], Ncycles) * bara;  
-    p_filtered = zeros(size(p));
-   
-    for j = 1:Ncycles
-        p_filtered(:, j) = SGFilter(p(:, j), polynomialOrder, frameLength, 0);
-    end
-
-    p_filtered_avg = mean(p_filtered, 2);
-    dp_dCA = diff(p_filtered_avg) / resolution; 
-    dV_dCA = diff(V_avg) / resolution; 
-    % Calculate aROHR
-    aROHR_result = aROHR(p_filtered_avg, V_avg, resolution, gamma, dp_dCA, dV_dCA);
-    % Calculate aHR
-    aHR_result = aHR(aROHR_result, resolution); 
-
-    % Store the results
-    aHR_all{i} = aHR_result; % Store aHR for each file
-
-    % Plot results
-    plot(Ca(:, 1), aROHR_result , 'LineWidth', 1.5, 'Color', colors(i, :), 'DisplayName', sprintf('(CA = %d°)', crankAngle));
-end
-
-% Finalize plot
-xlabel('Crank Angle (°)');
-ylabel('Apparent Rate of Heat Release [J/°]');
-title('aROHR for All HVO50 Files');
-legend('show');
-grid on;
-xlim([-45, 135]); 
-hold off;
-
-% Plot aHR for all files
-figure;
-hold on;
-crank_angles = 15:21;
-for i = 1:length(aHR_all)
-
-    plot(Ca(:, 1), aHR_all{i}, 'LineWidth', 1.5, 'Color', colors(i, :), ...
-        'DisplayName', sprintf('CA %d', crank_angles(i)));
-end
-xlabel('Crank Angle (°)');
-ylabel('Apparent Heat Release [J]');
-title('aHR for All Files');
-legend('show');
-grid on;
-xlim([-45, 135]);
-hold off;
 
 %% Compare Raw and Filtered Pressure Data for a Single Cycle
 figure;
@@ -440,20 +359,6 @@ title(['Comparison of Raw and Filtered Pressure Data (Cycle ', num2str(iselect),
 legend('show');
 grid on;
 hold off;
-
-% % Ideal Diesel Cycle
-% Extract initial conditions from actual data
-% Find index corresponding to Intake Valve Closure (IVC)
-% IVC_angle = ValveEvents.CaIVC;  % Crank angle for IVC
-% P1 = p_filtered_avg(idx_IVC);  % Pressure at IVC
-% V1 = V_avg(idx_IVC);           % Volume at IVC
-% Assume inlet temperature or estimate based on conditions
-% <<<<<<< HEAD:ExampleDataSet/Simple.m
-% T1 = 295 ;  % K assumed to be ambient
-% =======
-% T1 = 298.15;  % K (Atmospheric Conditions)
-
-
 %% Stoichiometric Calculations for HVO
 x_HVO = 16;
 m_fuel_per100cycles = 0.128; %(g)

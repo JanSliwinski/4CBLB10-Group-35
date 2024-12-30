@@ -25,5 +25,5 @@ function aROHR = aROHR(p_filtered_avg, V_avg, resolution, gamma, dp_dCA, dV_dCA)
     aROHR = gamma/(gamma - 1) * p_filtered_avg(1:end-1) .* dV_dCA + (1 / (gamma - 1)) * (V_avg(1:end-1) .* dp_dCA);
 
     % Append zero for the last point to match dimensions
-    %aROHR = [aROHR; 0];
+    aROHR = [aROHR; 0];
 end

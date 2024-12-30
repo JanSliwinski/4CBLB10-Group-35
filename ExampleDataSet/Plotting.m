@@ -110,15 +110,15 @@ for rowIdx = 1:numGroups
     
     %% Calculate aHR and aROHR
     dp_dCA = diff(avgPressure) / resolution; 
-    dV_dCA = diff(volume) / resolution; 
+    dV_dCA = diff(volume') / resolution; 
     % Calculate aROHR
-    aROHR_result = aROHR(avgPressure, volume, resolution, gamma, dp_dCA, dV_dCA);
+    aROHR_result = aROHR(avgPressure, volume', resolution, gamma, dp_dCA, dV_dCA);
     % Calculate aHR
     aHR_result = aHR(aROHR_result, resolution); 
-
+ 
     % Store the results
-    aHR_all{i} = aHR_result; % Store aHR for each file
-    aROHR_all{i} = aROHR_result; %Store aROHR for each file
+    aHR_all{rowIdx} = aHR_result; % Store aHR for each file
+    aROHR_all{rowIdx} = aROHR_result; %Store aROHR for each file
     % Plot results
     %plot(Ca(:, 1), aROHR_result , 'LineWidth', 1.5, 'Color', colors(i, :), 'DisplayName', sprintf('(CA = %d°)', crankAngle));
 
@@ -130,14 +130,14 @@ for rowIdx = 1:numGroups
     
 end
 colors = lines(height(T)); 
+%crank_angle_trimmed = crank_angle(1:end-1);
 %% Loop to plot aHR
 figure;
 hold on;
-crank_angles = 15:21;
 for i = 1:length(aHR_all)
     uniqueID = T.UniqueID{i};
-    plot(crank_angle(:, 1), aHR_all{i}, 'LineWidth', 1.5, 'Color', colors(i, :), ...
-        'DisplayName', sprintf('CA %d', crank_angles(i)));
+    plot(crank_angle_trimmed(:, 1), aHR_all{i}, 'LineWidth', 1.5, 'Color', colors(i, :), ...
+        'DisplayName', sprintf(' %d', uniqueID));
 end
 xlabel('Crank Angle (°)');
 ylabel('Apparent Heat Release [J]');
@@ -153,8 +153,8 @@ hold on;
 crank_angles = 15:21;
 for i = 1:length(aROHR_all)
     uniqueID = T.UniqueID{i};
-    plot(crank_angle(:, 1), aROHR_all{i}, 'LineWidth', 1.5, 'Color', colors(i, :), ...
-        'DisplayName', sprintf('CA %d', crank_angles(i)));
+    plot(crank_angle_trimmed(:, 1), aROHR_all{i}, 'LineWidth', 1.5, 'Color', colors(i, :), ...
+        'DisplayName', sprintf(' %d', uniqueID));
 end
 xlabel('Crank Angle (°)');
 ylabel('Apparent Heat Release [J]');
@@ -163,10 +163,6 @@ legend('show');
 grid on;
 xlim([-45, 135]);
 hold off;
-
-
-
-
 
 fprintf('Completed plotting for all groups.\n');
 
