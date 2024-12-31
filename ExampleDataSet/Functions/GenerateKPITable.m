@@ -1,15 +1,15 @@
-function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel, Cyl)
+function KPITable = GenerateKPITable(KPIdataFiles, true_mfr_fuel, table2_experiment1, LHV, RPM, AFR_stoich, x, MW_fuel, Cyl)
 %GENERATEKPITABLE Loads multiple datasets, calculates KPIs, and generates a summary table.
 %
 % Inputs:
 %   KPIdataFiles       : Cell array with paths, fuel types, and crank angles.
+%   true_mfr_fuel      : The calulated mass flow during the injection window(g/s)
 %   table2_experiment1 : Table with emissions data (loaded from Excel in main script).
 %   LHV                : Lower Heating Value of the fuel (J/kg).
-%   avg_m_fuelpercycle : Mass of the fuel per cycle (g)
 %   RPM                : Engine RPM.
 %   AFR_stoich         : Stoichiometric Air-Fuel Ratio.
 %   x                  : Coefficient of carbon in fuel (CxHy).
-%   MW_Fuel            : Molecular weight of the fuel (g/mol).
+%   M_fuel             : Molecular weight of the fuel (g/mol).
 %   Cyl                : Struct containing cylinder data
 %
 % Output:
@@ -20,11 +20,12 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_
     KPITable = table(...
     strings(n_rows, 1), ...          % FuelType as string array
     zeros(n_rows, 1), ...            % CrankAngle
+    zeros(n_rows, 1), ...            % Work
     zeros(n_rows, 1), ...            % Efficiency
     zeros(n_rows, 1), ...            % BSFC
     zeros(n_rows, 1), ...            % bsCO2
     zeros(n_rows, 1), ...            % bsNOx
-    'VariableNames', {'FuelType', 'CrankAngle', 'Efficiency', 'BSFC', 'bsCO2', 'bsNOx'});
+    'VariableNames', {'FuelType', 'CrankAngle[°]','Work[J]', 'Efficiency[-]', 'BSFC[g/kWh]', 'bsCO2[g/kWh]', 'bsNOx[g/kWh]'});
 
     %% Loop Through Each Data File to Calculate KPIs
     for i = 1:size(KPIdataFiles, 1)
@@ -43,7 +44,7 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_
 
         ca = reshape(data_in(:, 1), [], n_cycles);          % Crank angle in degrees
         p = reshape(data_in(:, 2), [], n_cycles) * 1e5;     % Pressure in Pa
-        mfr_fuel = 0.16;    % Fuel mass flow rate (kg/s)
+        mfr_fuel = true_mfr_fuel;    % Fuel mass flow rate (kg/s)
 
         % Apply Savitzky-Golay filter to pressure data
         polynomial_order = 3; % Adjust based on noise level
@@ -86,13 +87,10 @@ function KPITable = GenerateKPITable(KPIdataFiles, table2_experiment1, LHV, avg_
         end
 
         % Calculate KPIs
-        KPIs = CalculateKPIs(W, mean(mfr_fuel, 'all'), avg_m_fuelpercycle, LHV, P, x, mean(mfr_air, 'all'), nox_ppm, MW_Fuel);
+        KPIs = CalculateKPIs(true_mfr_fuel, LHV, P, x, mean(mfr_air, 'all'), nox_ppm, MW_fuel);
 
         % Populate the i-th row of KPITable
-        KPITable(i, :) = {fuel_type, crank_angle, KPIs.Efficiency, KPIs.BSFC, KPIs.bsCO2, KPIs.bsNOx};
+        KPITable(i, :) = {fuel_type, crank_angle, W, KPIs.Efficiency, KPIs.BSFC, KPIs.bsCO2, KPIs.bsNOx};
     end
-
-    %% Add Column Names to the KPI Table
-    KPITable.Properties.VariableNames = {'FuelType', 'CrankAngle', 'Efficiency', 'BSFC', 'bsCO2', 'bsNOx'};
-
+disp(mfr_air)
 end

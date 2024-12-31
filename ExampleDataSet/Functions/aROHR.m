@@ -21,7 +21,6 @@ function aROHR = aROHR(p_filtered_avg, V_avg, resolution, gamma, dp_dCA, dV_dCA)
 
     % Differentiate volume with respect to crank angle
     % dV_dTheta = diff(V_avg) ./ dTheta;
-
     % Calculate ROHR using the formula
     aROHR = gamma/(gamma - 1) * p_filtered_avg(1:end-1) .* dV_dCA + (1 / (gamma - 1)) * (V_avg(1:end-1) .* dp_dCA);
 

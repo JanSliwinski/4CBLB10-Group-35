@@ -2,7 +2,7 @@ warning off
 %% Initialization
 clear; clc; close all;
 %addpath("Functions", "Nasa");  % Add necessary paths
-
+figure('Visible', 'on');
 %% Units and Constants
 mm = 1e-3;
 dm = 0.1;
@@ -15,17 +15,63 @@ g = 1e-3;
 s = 1;
 RPM = 1500;     % constant RPM of experiments [rotation/min]
 T_int = 295.15; % assumed temperature at the intake [K]
+M_diesel = 167; % Molar mass (g/mol)
+M_HVO = 226; % Molar mass (g/mol)
+Density_HVO = 0.78;
+Density_Diesel = 0.85;
+%% Making Path for files of different blends
+
+% Format: data file, fuel, crank angle
+HVO50_raw_dataFiles = {
+        fullfile('Data', 'session2_Raw', '20241212_0000002_HVO50_secondexperiment_CA14.txt'), 'HVO50', 14;
+        fullfile('Data', 'session2_Raw', '20241212_0000008_HVO50_secondexperiment_CA15.txt'), 'HVO50', 15;
+        fullfile('Data', 'session2_Raw', '20241212_0000003_HVO50_secondexperiment_CA16.txt'), 'HVO50', 16;
+        fullfile('Data', 'session2_Raw', '20241212_0000004_HVO50_secondexperiment_CA17.txt'), 'HVO50', 17;
+        fullfile('Data', 'session2_Raw', '20241212_0000005_HVO50_secondexperiment_CA18.txt'), 'HVO50', 18;
+        fullfile('Data', 'session2_Raw', '20241212_0000009_HVO50_secondexperiment_CA19.txt'), 'HVO50', 19;
+        fullfile('Data', 'session2_Raw', '20241212_0000006_HVO50_secondexperiment_CA20.txt'), 'HVO50', 20;
+
+    };
+
+HVO60_raw_dataFiles = {
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI14.txt'), 'HVO60', 14;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI15.txt'), 'HVO60', 15;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI16.txt'), 'HVO60', 16;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI17.txt'), 'HVO60', 17;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI18.txt'), 'HVO60', 18;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI19.txt'), 'HVO60', 19;
+        fullfile('Data', 'Load50-MultipleSOI', 'SOI20.txt'), 'HVO60', 20;
+
+    };
+
+Processed_session1_files = {
+    fullfile('Data', 'processed_session1', '15CA_filtered_averaged.txt'), 'Diesel', 15;
+    fullfile('Data', 'processed_session1', '16CA_filtered_averaged.txt'), 'Diesel', 16;
+    fullfile('Data', 'processed_session1', '17CA_filtered_averaged.txt'), 'Diesel', 17;
+    fullfile('Data', 'processed_session1', '18CA_filtered_averaged.txt'), 'Diesel', 18;
+    fullfile('Data', 'processed_session1', '19CA_filtered_averaged.txt'), 'Diesel', 19;
+    fullfile('Data', 'processed_session1', '20CA_filtered_averaged.txt'), 'Diesel', 20;
+    fullfile('Data', 'processed_session1', '21CA_filtered_averaged.txt'), 'Diesel', 21;
+};
+
+session1_Raw_files = {
+    fullfile('Data', 'session1_Raw', '20241125_0000010_15CA.txt'), 'Diesel', 15;
+    fullfile('Data', 'session1_Raw', '20241125_0000014_16CA.txt'), 'Diesel', 16;
+    fullfile('Data', 'session1_Raw', '20241125_0000016_17CA.txt'), 'Diesel', 17;
+    fullfile('Data', 'session1_Raw', '20241125_0000013_18CA.txt'), 'Diesel', 18;
+    fullfile('Data', 'session1_Raw', '20241125_0000011_19CA.txt'), 'Diesel', 19;
+    fullfile('Data', 'session1_Raw', '20241125_0000012_20CA.txt'), 'Diesel', 20;
+    fullfile('Data', 'session1_Raw', '20241125_0000018_21CA.txt'), 'Diesel', 21;
+};
 
 %% Define Fuel used
 fuel_name = 'Diesel';
 LHV = 43e3; %Lower heating value given in the project guide for Diesel B7 J/g
-x = 12;
-MW_Fuel = 200; %Molar weight of fuel
-
+x = 12;     %Whats this???? 
 
 %% Load NASA Data (if needed)
 global Runiv
-Runiv = 8.314;
+Runiv = 8.314; 
 
 [SpS, El] = myload('Nasa/NasaThermalDatabase.mat', {'Diesel', 'O2', 'N2', 'CO2', 'H2O'});
 
@@ -44,12 +90,12 @@ ValveEvents.CaEVC = -344;
 ValveEvents.CaSOI = -3.2;  % Start of Injection
 
 %% Process experimental data
-folderpath = './ExampleDataSet/Data/session1_Raw/load3.5'; % path to raw data
-outputfilePath = './ExampleDataSet/Data/processed_Data_experiment1_load3.5.txt'; % path to output file
+% folderpath = 'ExampleDataSet/Data/session1_Raw/load5'; % path to raw data
+% outputfilePath = 'ExampleDataSet/Data/processed_Data_experiment1_load5.txt'; % path to output file
 % averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
 
 %% Load and Reshape Data
-dataFileName = fullfile('Data' ,'processed_Data_experiment1_load3.5.txt');
+dataFileName = fullfile('Data' , 'processed_Data_experiment1_load3.5.txt');
 dataIn = table2array(readtable(dataFileName));
 
 %Error handling:
@@ -88,8 +134,8 @@ end
 disp('Data filtered and reshaped into cycles');
 
 %% load the excelfile
-fileName = fullfile('Data', 'Session1.xlsx');
-sheetName = 'Sheet1';
+fileName = fullfile('Data', 'Session2.xlsx');
+sheetName = 'Sheet2';
 range1 = 'A8:G16'; % Table 1 range
 range2 = 'A22:G28'; % Table 2 range
 
@@ -106,9 +152,6 @@ lambda_load = table1experiment1{:, 7};    % Lambda
 
 % Read Table 2
 table2experiment1 = readtable(fileName, 'Sheet', sheetName, 'Range', range2);
-disp('Table 2:');
-disp(table2experiment1);
-
 table2experiment1.Properties.VariableNames = {'CrankAngle', 'CO_percent', 'HC_ppm', 'NOx_ppm', 'CO2_percent', 'O2_percent', 'Lambda'};
 disp('Table 2:');
 disp(table2experiment1);
@@ -121,6 +164,59 @@ CO2_percent_CA = table2experiment1{:, 5}; % CO2%
 O2_percent_CA = table2experiment1{:, 6}; % O2%
 lambda_CA = table2experiment1{:, 7};    % Lambda
 
+
+%% Detect Start and End of Injection from Sensor Current
+
+% Average sensor current across all cycles
+S_current_avg = mean(S_current, 2);
+
+% Define a baseline current
+baseline_current = min(S_current_avg);
+
+% Define a threshold above the baseline to detect injection
+threshold = baseline_current + 0.2;
+
+% Find indices where the sensor current exceeds the threshold
+injection_indices = find(S_current_avg > threshold);
+
+% Determine the start and end indices of injection
+injection_start_idx = injection_indices(1);
+injection_end_idx = injection_indices(end);
+
+% Find the corresponding crank angles
+injection_start_ca = Ca(injection_start_idx, 1);
+injection_end_ca = Ca(injection_end_idx, 1);
+
+% Display the results
+fprintf('Injection starts at %.2f° CA\n', injection_start_ca);
+fprintf('Injection ends at %.2f° CA\n', injection_end_ca);
+
+%% Plot Average Sensor Current with Injection Markers
+figure;
+set(gcf, 'Position', [200, 800, 1200, 400]);
+
+% Plot the average sensor current
+plot(Ca(:, 1), S_current_avg, 'LineWidth', 1.5);
+xlabel('Crank Angle (°)');
+ylabel('Sensor Current (A)');
+title('Average Sensor Current vs. Crank Angle');
+grid on;
+xlim([-25, 25]);
+
+% Add markers for injection start and end
+hold on;
+plot(injection_start_ca, S_current_avg(injection_start_idx), 'ro', 'MarkerSize', 8, 'LineWidth', 2);
+plot(injection_end_ca, S_current_avg(injection_end_idx), 'ro', 'MarkerSize', 8, 'LineWidth', 2);
+
+% Annotate the start and end points
+text(injection_start_ca, S_current_avg(injection_start_idx), sprintf('Start: %.2f°', injection_start_ca), ...
+     'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 10);
+text(injection_end_ca, S_current_avg(injection_end_idx), sprintf('End: %.2f°', injection_end_ca), ...
+     'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'FontSize', 10);
+
+hold off;
+
+true_mfr_fuel = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, threshold);
 
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
@@ -197,10 +293,13 @@ fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
 
 %% Stoichiometric calculations
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
-
+stoich_coeffs.fuel
 %% Calculate mass flow of air:
 O2_percent = mean(O2_percent_load(4:6));  % Load relevant exhaust data from processed excel
-mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich);
+
+% mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich);
+mfr_air = CalculateMassFlowAir(O2_percent, true_mfr_fuel, AFR_stoich);
+fprintf('Mass flow rate for air: %.6f g/s\n', mfr_air)
 
 %% Calculate Cp and gamma
 % [cp, gamma] = calc_cp_gamma(LHV, mfr_fuel, mfr_air);
@@ -242,136 +341,13 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 % KPI data
 % Format: data file, fuel, crank angle
 
-
-KPIdataFiles = {
-        fullfile('Data', 'session1_Raw', '20241125_0000010_15CA.txt'), 'Diesel', 15;
-        fullfile('Data', 'session1_Raw', '20241125_0000014_16CA.txt'), 'Diesel', 16;
-        fullfile('Data', 'session1_Raw', '20241125_0000016_17CA.txt'), 'Diesel', 17;
-        fullfile('Data', 'session1_Raw', '20241125_0000013_18CA.txt'), 'Diesel', 18;
-        fullfile('Data', 'session1_Raw', '20241125_0000011_19CA.txt'), 'Diesel', 19;
-        fullfile('Data', 'session1_Raw', '20241125_0000012_20CA.txt'), 'Diesel', 20;
-        fullfile('Data', 'session1_Raw', '20241125_0000017_21CA.txt'), 'Diesel', 21;
-    };
-
- %Generate KPI table
-KPITable = GenerateKPITable(KPIdataFiles, table2experiment1, LHV, avg_m_fuelpercycle, RPM, AFR_stoich, x, MW_Fuel,Cyl);
+% The selected fuel
+MW_fuel = M_HVO;
+KPIdataFiles = HVO60_raw_dataFiles;
+% Generate KPI table
+KPITable = GenerateKPITable(KPIdataFiles, true_mfr_fuel, table2experiment1, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl);
 disp(KPITable)
 
-%% Rate of changes, Pressure and Volume
-% Crank angle change per data point
-dCA = resolution;
-
-% Pressure change per data point
-dp = diff(p_filtered_avg);
-% Pressure change per Crank angle
-dp_dCA = dp/dCA;
-
-% Volume change per data point
-dV = diff(V_avg);
-% Volume change per Crank angle
-dV_dCA = dV/dCA;
-
-%% Calculate aROHR
- 
-aROHR_avg = aROHR(p_filtered_avg, V_avg, resolution, gamma, dp_dCA, dV_dCA);
-
-% Plot the apparent Rate of Heat Release
-figure;
-plot(Ca(:, 1), aROHR_avg, 'LineWidth', 1.5);
-xlabel('Crank Angle (°)');
-ylabel('Apparent Rate of Heat Release [J/°]');
-title('Apparent Rate of Heat Release (Average)');
-xlim([-35,135])
-grid on;
-
-%% Calculate Apparent Heat Release
-aHR_avg = aHR(aROHR_avg, resolution);  % Assuming aHR function is already defined
-
-% Plot the Apparent Heat Release
-figure;
-plot(Ca(:, 1), aHR_avg, 'LineWidth', 1.5);  % Ca(:,1) is the crank angle array
-xlabel('Crank Angle (°)');
-ylabel('Apparent Heat Release [J]');
-title('Apparent Heat Release (Average)');
-xlim([-45,135]);
-grid on;
-hold on;
-
-% Determine the Maximum Value and Its Index
-[max_aHR, max_idx] = max(aHR_avg);  % Find the max value and its index
-
-% Calculate 10%, 50%, and 90% of Maximum Value
-val_10 = 0.1 * max_aHR;  % 10% of max
-val_50 = 0.5 * max_aHR;  % 50% of max
-val_90 = 0.9 * max_aHR;  % 90% of max
-
-% Find Crank Angles Before the Peak
-% Use only the range before and including the peak for interpolation
-crank_angle_pre_peak = Ca(1:max_idx, 1);  % Crank angles up to the peak
-aHR_pre_peak = aHR_avg(1:max_idx);       % aHR values up to the peak
-
-% Interpolate for the 10%, 50%, and 90% values
-crank_angle_10 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_10);
-crank_angle_50 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_50);
-crank_angle_90 = interp1(aHR_pre_peak, crank_angle_pre_peak, val_90);
-
-% Plot the Updated Results
-% Highlight points with scatter
-scatter([crank_angle_10, crank_angle_50, crank_angle_90], ...
-        [val_10, val_50, val_90], 'r', 'filled');
-
-% Annotate the points
-text(crank_angle_10, val_10, sprintf('10%% (%.2f°)', crank_angle_10), ...
-    'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'FontSize', 10);
-text(crank_angle_50, val_50, sprintf('50%% (%.2f°)', crank_angle_50), ...
-    'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'FontSize', 10);
-text(crank_angle_90, val_90, sprintf('90%% (%.2f°)', crank_angle_90), ...
-    'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'FontSize', 10);
-
-
-%% Plot pV Diagrams
-figure;
-tl = tiledlayout(2, 2);
-
-% Subplot 1: Linear pV Diagram (Average)
-nexttile;
-plot(V_avg / dm^3, p_avg / bara);
-xlabel('Volume [dm³]');
-ylabel('Pressure [bar]');
-title('Average pV Diagram (Linear Scale)');
-grid on;
-
-% Subplot 2: Logarithmic pV Diagram (Average)
-nexttile;
-loglog(V_avg / dm^3, p_avg / bara);
-xlabel('Volume [dm³]');
-ylabel('Pressure [bar]');
-title('Average pV Diagram (Logarithmic Scale)');
-grid on;
-
-% Subplot 3: Single Cycle pV Diagram
-nexttile;
-plot(V_all(:, iselect) / dm^3, p(:, iselect) / bara);
-xlabel('Volume [dm³]');
-ylabel('Pressure [bar]');
-title(['pV Diagram (Cycle ', num2str(iselect), ')']);
-grid on;
-
-% Subplot 4: Filtered Average pV Diagram
-nexttile;
-loglog(V_avg / dm^3, p_filtered_avg / bara);
-xlabel('Volume [dm³]');
-ylabel('Pressure [bar]');
-title('Filtered Average pV Diagram (Logarithmic Scale)');
-grid on;
-
-sgtitle('pV Diagrams');
-
-if any(p(:) < 0)
-    warning('There are negative pressure values.');
-else
-    disp('All pressure values are non-negative.');
-end
 
 %% Compare Raw and Filtered Pressure Data for a Single Cycle
 figure;
@@ -384,19 +360,27 @@ title(['Comparison of Raw and Filtered Pressure Data (Cycle ', num2str(iselect),
 legend('show');
 grid on;
 hold off;
+%% Stoichiometric Calculations for HVO
+x_HVO = 16;
+m_fuel_per100cycles = 0.128; %(g)
+%HVO100
+moles_HVO = m_fuel_per100cycles / M_HVO;
 
-%% Ideal Diesel Cycle
-% Extract initial conditions from actual data
-% Find index corresponding to Intake Valve Closure (IVC)
-% IVC_angle = ValveEvents.CaIVC;  % Crank angle for IVC
-% P1 = p_filtered_avg(idx_IVC);  % Pressure at IVC
-% V1 = V_avg(idx_IVC);           % Volume at IVC
-% Assume inlet temperature or estimate based on conditions
-% <<<<<<< HEAD:ExampleDataSet/Simple.m
-% T1 = 295 ;  % K assumed to be ambient
-% =======
-% T1 = 298.15;  % K (Atmospheric Conditions)
+moles_O2 = moles_HVO * (3*x_HVO*0.5) + 1/2; % Moles of O2 required
+moles_N2 = moles_O2 * 79/21;   % Moles of N2 in reactants
 
 
+moles_CO2 = moles_HVO * 16; % Moles of CO2 produced
+moles_H2O = moles_HVO * 17; % Moles of H2O produced
+Stoich_HVO100 = [moles_HVO, moles_O2, moles_N2, moles_CO2, moles_H2O, moles_N2];
+%HVO50
+m_fuel_per100cycles = 0.128; %(g)
 
-
+ a = m_fuel_per100cycles / (((Density_HVO / Density_Diesel) + 1) * M_diesel);
+ b = m_fuel_per100cycles / (((Density_Diesel / Density_HVO) + 1) * M_HVO);
+ e = a * 12 + b * 16;
+ g = a * 23 + b * 34;
+ q = 9.25 * a + 24.5 * b;
+ k = q * (79 / 21);
+ Stoich_HVO50 = [a, b, q, k, e, g/2, k]; %Moles of each Component per 100 cycles
+ 
