@@ -90,11 +90,6 @@ ValveEvents.CaEVO = 149;
 ValveEvents.CaEVC = -344;
 ValveEvents.CaSOI = -3.2;  % Start of Injection
 
-%% Process experimental data
-% folderpath = 'ExampleDataSet/Data/session1_Raw/load5'; % path to raw data
-% outputfilePath = 'ExampleDataSet/Data/processed_Data_experiment1_load5.txt'; % path to output file
-% averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
-
 %% Load and Reshape Data
 dataFileName = fullfile('Data' , 'processed_Data_experiment1_load3.5.txt');
 dataIn = table2array(readtable(dataFileName));
