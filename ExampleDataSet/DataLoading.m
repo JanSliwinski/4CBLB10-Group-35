@@ -16,10 +16,10 @@ clear; clc; close all;
 
 %% Define Paths
 % Specify the folder containing the renamed experiment data TXT files
-dataFolder = '/Users/maxgp/Applications/MatLab/4CBLB10-Group-35/ExampleDataSet/AdjustedData'; % <-- Replace with your actual folder path
+dataFolder = 'C:\Users\Kata\Desktop\TUE\3rd year\2nd quartile\Sustainable fuels DBL\Matlab\ExampleDataSet\AdjustedData'; % <-- Replace with your actual folder path
 
 % Specify the path to the additional data CSV file
-additionalCSVPath = '/Users/maxgp/Applications/MatLab/4CBLB10-Group-35/ExampleDataSet/CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
+additionalCSVPath = 'C:\Users\Kata\Desktop\TUE\3rd year\2nd quartile\Sustainable fuels DBL\Matlab\ExampleDataSet\CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
 
 % Verify that the data folder exists
 if ~isfolder(dataFolder)
@@ -169,6 +169,7 @@ for i = 1:length(files)
     
     % Check if this uniqueID already exists in dataArray
     if isempty(dataArray)
+        disp('before isempty')
         % dataArray is empty, add the first entry directly
         newRow = size(dataArray, 1) + 1;
         dataArray{newRow, 1} = uniqueID; % Store the unique identifier
@@ -177,6 +178,7 @@ for i = 1:length(files)
         dataArray{newRow, 4} = {}; % Initialize column 4 as empty, to be filled later
         fprintf('Creating new group %s (first entry).\n', uniqueID);
     else
+         disp('after isempty')
         % dataArray is not empty, proceed to check for existing entries
         existingRow = find(strcmp({dataArray{:, 1}}, uniqueID));
         
