@@ -1,4 +1,4 @@
-% ============================================
+% = ===========================================
 % MATLAB Script: Data Integration and Loading
 % ============================================
 % This script loads experimental data TXT files and integrates additional
