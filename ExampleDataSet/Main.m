@@ -46,6 +46,7 @@ ID = 'L50I15C50'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
 [dataIn, ExhaustData, Ca, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
 
+
 %% Detect Start and End of Injection from Sensor Current
 
 % Average sensor current across all cycles
