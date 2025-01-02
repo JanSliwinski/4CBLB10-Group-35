@@ -1,4 +1,4 @@
-function aHR = aHR(aROHR, resolution)
+function aHR = get_aHR(aROHR)
 % aHR Apparent Heat Release
 % Calculates the apparent heat release by integrating the aROHR over crank angle.
 %
@@ -8,11 +8,9 @@ function aHR = aHR(aROHR, resolution)
 %
 % Output:
 %   aHR - Apparent heat release [J]
-
-    % Convert resolution to radians for consistency
-    dTheta = deg2rad(resolution);
+    resolution = 0.2;
 
     % Perform cumulative trapezoidal integration
-    aHR = cumtrapz(aROHR)* resolution; % Integration over aROHR
+    aHR = cumtrapz(aROHR) .* resolution; % Integration over aROHR
 end
 

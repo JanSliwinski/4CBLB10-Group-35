@@ -7,6 +7,7 @@
 % ============================================
 
 %% Check if Table T Exists
+%load("T.mat")
 if ~exist('T', 'var')
     error('Table T does not exist in the workspace. Please run the data integration script first.');
 end
