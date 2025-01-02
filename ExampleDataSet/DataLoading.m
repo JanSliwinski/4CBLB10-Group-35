@@ -16,10 +16,10 @@ clear; clc; close all;
 
 %% Define Paths
 % Specify the folder containing the renamed experiment data TXT files
-dataFolder = 'C:\Users\Kata\Desktop\TUE\3rd year\2nd quartile\Sustainable fuels DBL\Matlab\ExampleDataSet\AdjustedData'; % <-- Replace with your actual folder path
+dataFolder = 'AdjustedData'; % <-- Replace with your actual folder path
 
 % Specify the path to the additional data CSV file
-additionalCSVPath = 'C:\Users\Kata\Desktop\TUE\3rd year\2nd quartile\Sustainable fuels DBL\Matlab\ExampleDataSet\CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
+additionalCSVPath = 'CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
 
 % Verify that the data folder exists
 if ~isfolder(dataFolder)
@@ -34,7 +34,7 @@ end
 %% Define Savitzky-Golay Filter Parameters
 % You can adjust these parameters as needed
 k = 2;    % Polynomial order
-n = 5;    % Window size (must be odd)
+n = 15;    % Window size (must be odd)
 s = 0;    % Derivative order (0 for smoothing)
 
 %% Load Additional Data
@@ -403,6 +403,8 @@ fprintf('Completed computing average cycle data for all groups.\n');
 disp('Integrated Data Table:');
 disp(T(1:min(5, height(T)), :)); % Display first 5 rows
 
+%% Save T not to run it every time...
+save("T","T")
 
 %% Cleanup
 % Optionally, shut down the parallel pool if no longer needed
