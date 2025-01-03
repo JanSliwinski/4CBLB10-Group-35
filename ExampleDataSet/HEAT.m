@@ -1,6 +1,6 @@
 clear all, close all; addpath("Functions\")
 load("T.mat"); resolution = 0.2;
-gamma = CalculateGamma(T,3);
+gamma = CalculateGamma(T,6);
 
 %%
 
