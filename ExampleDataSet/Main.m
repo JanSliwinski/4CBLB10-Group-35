@@ -191,16 +191,17 @@ aROHR = get_aROHR(p_filt,volume,gamma);
 idxStart = 350 / 0.2; idxEnd = (30 + 360) / 0.2;
 aROHR(1:idxStart) = 0; aROHR(idxEnd:end) = 0;
 aHR = get_aHR(aROHR);
+disp("aROHR and aHR computed successfully!")
 
-figure;
-subplot(1,2,1)
-plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
-xlim([-10,30]);
-legend("aROHR","Location","southeast");title(["Apparent Rate of Heat", "Release for " + ID]);
-subplot(1,2,2)
-plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
-xlim([-10,30]);
-legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
+% figure;
+% subplot(1,2,1)
+% plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
+% xlim([-10,30]);
+% legend("aROHR","Location","southeast");title(["Apparent Rate of Heat", "Release for " + ID]);
+% subplot(1,2,2)
+% plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
+% xlim([-10,30]);
+% legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
 
 %% Calculate Heat of combustion and Temperature at exhaust - LHV way
 % [T_exh, Q_combustion_LHV, m_combusted] = Calc_Q_LHV(C_p, mfr_fuel, mfr_air, RPM, W, LHV, T_int);
