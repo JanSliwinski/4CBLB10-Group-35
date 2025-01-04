@@ -1,90 +1,97 @@
-function gamma = CalculateGamma(SpS,RPM,volume,pressure,O2percent,CO2percent,massFuel)
-    %% Initialisation and checking if there is information on exhaust.
-    Rair = 287; Runiv = 8.314; O2volfrac = O2percent/100; CO2volfrac = CO2percent/100;
-    %% Exhuast composition data
-    N2volfrac = 0.78;          % Nitrogen fraction in air
-    O2volfrac_air = 0.21;      % Oxygen fraction in air
-    H2Ovolfrac = O2volfrac_air - O2volfrac - CO2volfrac; % Calculate water vapor fraciton
-    % Grouping together
-    moleFractions = [N2volfrac, O2volfrac, CO2volfrac, H2Ovolfrac, 0]; % no diesel
-    
-    % Getting AFR
-    AFR = compute_AFR(CO2volfrac,0, O2volfrac/100,N2volfrac);
-    massFuel = mean(massFuel)/1000 / (RPM/60/2);
+function gamma = CalculateGamma(SpS, RPM, volume, pressure, O2percent, CO2percent, massFuel)
+    %% CalculateGamma: Computes the ratio of specific heats (gamma) at each point
+    % in the crank-angle domain. Pre- and post-combustion are handled separately,
+    % and a mixture of gases is considered using NASA polynomial data for cp.
+
+    %% Initial setup
+    Rair  = 287;       % Specific gas constant for air [J/(kg·K)]
+    Runiv = 8.314;     % Universal gas constant [J/(mol·K)]
+    % Convert the O2 and CO2 input (in percent) to fractional volumes
+    O2volfrac  = O2percent  / 100; 
+    CO2volfrac = CO2percent / 100;
+
+    %% Exhaust composition data
+    N2volfrac      = 0.78;          % Approx. nitrogen fraction in air
+    O2volfrac_air  = 0.21;          % Oxygen fraction in air
+    % Water vapor fraction: difference between air O2 fraction and
+    % the measured O2 + CO2 in exhaust
+    H2Ovolfrac     = O2volfrac_air - O2volfrac - CO2volfrac;
+    % Combine all relevant species' volume fractions
+    moleFractions  = [N2volfrac, O2volfrac, CO2volfrac, H2Ovolfrac, 0]; % The last '0' is for Diesel
+
+    %% Calculate Air-Fuel Ratio (AFR)
+    % compute_AFR() is presumably a custom function that uses O2, CO2, etc.
+    AFR = compute_AFR(CO2volfrac, 0, O2volfrac / 100, N2volfrac);
+
+    % Convert mass flow from mg/s to kg/cycle:
+    % - mean(...) picks the average injection flow rate
+    % - dividing by 1000 converts mg to g
+    % - dividing by (RPM/60/2) converts from grams/s to grams/cycle 
+    %   for a 4-stroke cycle at the given RPM
+    massFuel = mean(massFuel) / 1000 / (RPM / 60 / 2);
+
+    % Estimate mass of air based on the mass of fuel and AFR
     massAir = massFuel * AFR;
-    
-    %% Compute specific gas constants for inlet and outlet
-    % Get molar masses of species in kg/mol
-    molarMass = [SpS.Mass];
-    % Find mass fractions
+
+    %% Compute gas constants (R) for mixture
+    % Extract species' molar masses (kg/mol) from the NASA database entries (SpS)
+    molarMass    = [SpS.Mass];
+    % Convert volume fractions to mass fractions:
     massFractions = moleFractions .* molarMass ./ (moleFractions * molarMass');
-    % Find specific gas constants for all constituents
-    Rs = Runiv./molarMass;
-    % Get specific gas constats
-    Rin = (Rair * AFR + Rs(5)) / (AFR+1);
+
+    % Compute each species' individual gas constant = Runiv / (molar mass)
+    Rs = Runiv ./ molarMass;
+
+    % Inlet mixture gas constant Rin: a combination of air + diesel
+    % Weighted by the AFR
+    Rin  = (Rair * AFR + Rs(5)) / (AFR + 1); 
+    % Exhaust mixture gas constant Rout: a mass-weighted combination 
+    % of the species present post-combustion
     Rout = massFractions * Rs';
-    
-    %% Getting Temperature
-    % Find maximum pressure and combustion point
-    [~,combustion] = max(pressure);
-    
-    temperature = zeros(size(pressure));
-    gamma = zeros(size(pressure));
-    % %Temperature and gamma calculation loop
-    for dummy = 1:size(gamma)
-        % Pre-combustion calculations
-        if dummy <= combustion
-            % Calculate temperature using ideal gas law
-            temperature(dummy) = pressure(dummy)*1e5 * volume(dummy) / (Rin * massAir);
 
-            % Calculate specific heat ratio (gamma)
-            gamma(dummy) = compute_cp(temperature(dummy),SpS,massFractions) ...
-                / (compute_cp(temperature(dummy),SpS,massFractions) - Rin);
+    %% Determine combustion point (peak pressure)
+    % The index at which pressure is max is considered the "combustion" boundary
+    [~, combustion] = max(pressure);
 
-            % Post-combustion calculations
-        else
-            % Calculate temperature using exhaust gas properties
-            temperature(dummy) = pressure(dummy)*1e5 * volume(dummy) / (Rout * massAir);
+    %% Prepare to compute temperature and gamma across the crank angle range
+    nPoints    = length(pressure);  % Total number of points in the domain
+    idxPreComb = 1 : combustion;    % Indices before combustion peak
+    idxPostComb= combustion+1 : nPoints; % Indices after combustion peak
 
-            % Calculate specific heat ratio (gamma)
-            gamma(dummy) = compute_cp(temperature(dummy),SpS,massFractions) ...
-                / (compute_cp(temperature(dummy),SpS,massFractions) - Rout);
-        end
+    % Preallocate arrays
+    temperature = zeros(nPoints, 1);
+
+    %% Compute Temperature
+    % Pre-combustion: T = p * V / (Rin * massAir), using inlet mixture R
+    temperature(idxPreComb) = ...
+        pressure(idxPreComb) * 1e5 .* volume(idxPreComb) ./ (Rin  * massAir);
+
+    % Post-combustion: T = p * V / (Rout * massAir), using exhaust mixture R
+    temperature(idxPostComb) = ...
+        pressure(idxPostComb)* 1e5 .* volume(idxPostComb) ./ (Rout * massAir);
+
+    %% Compute cp for each point
+    % Build a matrix to hold cp values for each species at every crank-angle point
+    nSp      = numel(SpS);         % Number of species
+    cpMatrix = zeros(nPoints, nSp);% Will store cp for each species across all points
+
+    % Loop over species, compute cp with NASA polynomials at each temperature
+    for i = 1 : nSp
+        [cpVals, ~]   = CpNasa(temperature, SpS(i)); 
+        cpMatrix(:, i)= cpVals;  
     end
-    %% Vectorized temperature/gamma calculation (no compute_cp call)
-% 
-% nPoints    = length(pressure);
-% idxPreComb = 1:combustion;
-% idxPostComb= combustion+1 : nPoints;
-% 
-% % 1) Build a full temperature array (pre- or post-comb)
-% temperature = zeros(nPoints,1);
-% 
-% % Pre-combustion: T = p*V/(Rin*massAir)
-% temperature(idxPreComb) = ...
-%     pressure(idxPreComb)*1e5 .* volume(idxPreComb) ./ (Rin  * massAir);
-% 
-% % Post-combustion: T = p*V/(Rout*massAir)
-% temperature(idxPostComb) = ...
-%     pressure(idxPostComb)*1e5 .* volume(idxPostComb) ./ (Rout * massAir);
-% 
-% % 2) Compute cp for *every point* and *every species* at once
-% %    We'll store all species’ cp in one matrix. Each column = one species
-% nSp      = numel(SpS);
-% cpMatrix = zeros(nPoints, nSp);
-% for i = 1:nSp
-%     [cpVals, ~]       = CpNasa(temperature, SpS(i)); 
-%     cpMatrix(:, i)    = cpVals;  
-% end
-% 
-% % 3) Weighted sum of columns by massFractions => mixture cp at each point
-% cpMix = cpMatrix * massFractions(:);  % size(cpMix) = [nPoints, 1]
-% 
-% % 4) Build an R array for entire domain (Rin vs. Rout)
-% Rarray = zeros(nPoints,1);
-% Rarray(idxPreComb)  = Rin;
-% Rarray(idxPostComb) = Rout;
-% 
-% % 5) Finally, compute gamma = cp / (cp - R) for each point
-% gamma = cpMix ./ (cpMix - Rarray);
+
+    % Weighted sum of species cp => mixture cp
+    % Each row of cpMatrix is a set of species cp at a certain crank angle.
+    % Multiplying by massFractions(:) sums them up by their mass fraction.
+    cpMix = cpMatrix * massFractions(:);
+
+    %% Build an R array for entire domain (Rin vs. Rout)
+    Rarray            = zeros(nPoints, 1);
+    Rarray(idxPreComb)= Rin;
+    Rarray(idxPostComb) = Rout;
+
+    %% Compute gamma = cp / (cp - R) at every point
+    gamma = cpMix ./ (cpMix - Rarray);
+
 end

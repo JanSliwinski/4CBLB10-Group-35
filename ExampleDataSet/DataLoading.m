@@ -34,7 +34,7 @@ end
 %% Define Savitzky-Golay Filter Parameters
 % You can adjust these parameters as needed
 k = 2;    % Polynomial order
-n = 15;    % Window size (must be odd)
+n = 21;    % Window size (must be odd)
 s = 0;    % Derivative order (0 for smoothing)
 
 %% Load Additional Data

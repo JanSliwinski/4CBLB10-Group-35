@@ -1,4 +1,4 @@
-function aROHR = get_aROHR(T, expNo, gamma)
+function aROHR = get_aROHR(p_filt, volume, gamma)
     % aROHR Apparent Rate of Heat Release
     % Calculates the apparent rate of heat release using pressure and volume data.
     %
@@ -23,19 +23,8 @@ function aROHR = get_aROHR(T, expNo, gamma)
         % dV_dTheta = diff(V_avg) ./ dTheta;
         % Calculate ROHR using the formula
     
-        pressure = T.AverageCycleData{expNo}.AvgPressure * 1e5;
-    
-        % Engine Geometry Parameters
-        mm = 0.001; CA = (0:0.2:720-0.2)';
-        Cyl.Bore = 104 * mm;               % Cylinder bore
-        Cyl.Stroke = 85 * mm;              % Cylinder stroke
-        Cyl.CompressionRatio = 21.5;       % Compression ratio
-        Cyl.ConRod = 136.5 * mm;           % Connecting rod length
-        Cyl.TDCangle = 180;                % Top Dead Center angle
+        pressure = p_filt .* 1e5;
         
-        % Calculate cylinder volume using CylinderVolume function
-        volume = CylinderVolume(CA,Cyl);
-    
         resolution = 0.2;
         dp_dCA = [diff(pressure) / resolution;0]; 
         dV_dCA = [diff(volume) / resolution;0]; 

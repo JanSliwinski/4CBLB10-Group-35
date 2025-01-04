@@ -29,7 +29,6 @@ LHV_diesel = 43e3;  %Lower heating value given in the project guide for Diesel B
 ID = 'L25I14C0'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
 [dataIn, ExhaustData, Ca, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
-
 %% Define Fuel used
 fuel_name = 'Diesel';
 fprintf('Fuel used:', fuel_name);
@@ -145,6 +144,19 @@ if exist('O2_percent_load','var')
 else
     gamma = 1.32; % constant if no exhuast data exist
 end
+aROHR = get_aROHR(p_filt,volume,gamma);
+% Isolate peak
+idxStart = 350 / 0.2; idxEnd = (30 + 360) / 0.2;
+aROHR(1:idxStart) = 0; aROHR(idxEnd:end) = 0;
+aHR = get_aHR(aROHR);
+
+figure;
+subplot(1,2,1)
+plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
+legend("aROHR","Location","southeast");title(["Apparent Rate of Heat", "Release for " + ID]);
+subplot(1,2,2)
+plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
+legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
 %%
 
 
