@@ -1,6 +1,16 @@
 clear all, close all; addpath("Functions\")
 load("T.mat"); resolution = 0.2;
-gamma = CalculateGamma(T,6);
+
+        %% Load Nasa database
+        addpath("Nasa\", "Functions\");
+        TdataBase = fullfile('Nasa', 'NasaThermalDatabase'); 
+        load(TdataBase);
+        
+        %% Find species
+        iSp = myfind({Sp.Name}, {'N2', 'O2', 'CO2','H2O','Diesel'}); % Find indexes of these species
+        SpS = Sp(iSp); % Create subset of species based on found indexes
+        
+gamma = CalculateGamma(T,3,SpS);
 
 %%
 
