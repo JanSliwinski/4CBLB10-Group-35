@@ -1,6 +1,6 @@
 warning off
 %% Initialization
-if isempty(T)
+if ~exist("T","var")
     load('T.mat','T')
 end
 clearvars -except T; close all; clc
@@ -26,8 +26,9 @@ LHV_diesel = 43e3;  %Lower heating value given in the project guide for Diesel B
 % LHV_HVO = ?
 
 %% Load and Reshape data (also exhaust data)
-ID = 'L50I15C50'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
+ID = 'L50I17C50'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
+
 [dataIn, ExhaustData, Ca, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
 
 
@@ -41,7 +42,7 @@ x = 12;     %Whats this????
 global Runiv
 Runiv = 8.314; 
 
-[SpS, El] = myload('Nasa/NasaThermalDatabase.mat', {'Diesel', 'O2', 'N2', 'CO2', 'H2O'});
+[SpS, El] = myload('Nasa/NasaThermalDatabase.mat', {'N2', 'O2', 'CO2', 'H2O', 'Diesel'});
 
 %% Volume
 % Engine Geometry Parameters
@@ -53,6 +54,10 @@ Cyl.TDCangle = 180;                % Top Dead Center angle
 % Calculate cylinder volume using CylinderVolume function
 volume = CylinderVolume(Ca,Cyl);
 disp('Cylider volume calculated / cycle');
+
+%% Stoichiometric calculations
+[stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
+stoich_coeffs.fuel
 
 %% Detect Start and End of Injection from Sensor Current
 
@@ -129,13 +134,8 @@ plot(Ca(iselect), p_filt(iselect) / bara, 'r', 'LineWidth', 2);
 set(gca, 'XTick', -360:60:360);
 grid on;
 
-%% Calculate Average Volume and Pressure
-V_avg = mean(volume, 2);         % Average volume across all cycles for every CA
-p_avg = mean(p_filt, 2);             % Average pressure across all cycles for every CA
-p_filtered_avg = mean(p_filt, 2);
-
 %% Calculate Work
-W = trapz(V_avg, p_avg); % Calculate the area under the averaged p-V curve
+W = trapz(volume, p_filt*1e5); % Calculate the area under the averaged p-V curve
 disp(['Calculated work: ', num2str(W), ' J']);
 
 % Constants
@@ -169,9 +169,6 @@ fuel_mass_flow_rate = fuel_molar_flow_rate * fuel_molar_mass; % in g/s
 % Result
 fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
 
-%% Stoichiometric calculations
-[stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
-stoich_coeffs.fuel
 %% Calculate mass flow of air:
 
 % mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich);
@@ -180,28 +177,28 @@ stoich_coeffs.fuel
 
 
 %% aROHR
-p_filt = sgolayfilt(p_filt,2,101);
+p_filtRough = sgolayfilt(p_filt,2,101);
 if exist('O2_percent_load','var')
-    gamma = CalculateGamma(SpS,RPM,volume,p_filt,O2_percent_load,CO2_percent_load,mfr_fuel);
+    gamma = CalculateGamma(SpS,volume,p_filtRough,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
 else
     gamma = 1.32; % constant if no exhuast data exist
 end
-aROHR = get_aROHR(p_filt,volume,gamma);
+aROHR = get_aROHR(p_filtRough,volume,gamma);
 % Isolate peak
-idxStart = 350 / 0.2; idxEnd = (30 + 360) / 0.2;
+idxStart = 355 / 0.2; idxEnd = (50 + 360) / 0.2;
 aROHR(1:idxStart) = 0; aROHR(idxEnd:end) = 0;
 aHR = get_aHR(aROHR);
 disp("aROHR and aHR computed successfully!")
 
-% figure;
-% subplot(1,2,1)
-% plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
-% xlim([-10,30]);
-% legend("aROHR","Location","southeast");title(["Apparent Rate of Heat", "Release for " + ID]);
-% subplot(1,2,2)
-% plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
-% xlim([-10,30]);
-% legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
+figure;
+subplot(1,2,1)
+plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
+xlim([-5,50]);
+legend("aROHR","Location","southeast");title(["Apparent Rate of Heat", "Release for " + ID]);
+subplot(1,2,2)
+plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
+xlim([-5,50]);
+legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
 
 %% Calculate Heat of combustion and Temperature at exhaust - LHV way
 % [T_exh, Q_combustion_LHV, m_combusted] = Calc_Q_LHV(C_p, mfr_fuel, mfr_air, RPM, W, LHV, T_int);

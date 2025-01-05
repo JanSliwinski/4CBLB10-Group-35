@@ -45,8 +45,6 @@ for rowIdx = 1:numGroups
     
     fprintf('Processing Group %d/%d: %s\n', rowIdx, numGroups, uniqueID);
     
-
-    
     % Extract averaged variables
     avgPressure = averageData.AvgPressure;   % Vector of average pressure values
     avgMassFlow = averageData.AvgMassFlow;   % Vector of average mass flow values
@@ -159,7 +157,7 @@ for i = 1:length(aROHR_all)
 end
 xlabel('Crank Angle (°)');
 ylabel('Apparent Heat Release [J]');
-title('aHR for All Files');
+title('aROHR for All Files');
 legend('show');
 grid on;
 xlim([-45, 135]);
