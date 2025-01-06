@@ -72,7 +72,7 @@ for rowIdx = 1:numGroups
          CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, uniqueID, bara);
         
         true_mfr_fuel = mean(mfr_fuel);
-        p_filtRough = sgolayfilt(p_filt, 2, 101);
+        p_filtRough = sgolayfilt(p_filt, 2,15);
 
         gamma = CalculateGamma(SpS,volume,p_filtRough,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
         % Calculate ROHR and HR
