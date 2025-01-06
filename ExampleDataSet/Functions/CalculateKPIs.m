@@ -1,12 +1,13 @@
-function KPIs = CalculateKPIs(true_mfr_fuel, LHV, P, x, mfr_air, NOx_ppm, MW_Fuel)
-    % Inputs:
+function KPIs = CalculateKPIs(true_mfr_fuel, LHV, P, x, mfr_air, NOx_ppm, MW_Fuel, CO2_percent, O2_percent)
     %   true_mfr_fuel      : Fuel mass flow rate (kg/s)
     %   LHV                : Lower heating value of the fuel (J/kg)
     %   P                  : Power output (W)
     %   x                  : Number of carbon atoms in the fuel (CxHy)
     %   mfr_air            : Air mass flow rate (kg/s)
-    %   NOx_ppm            : NOx concentration in ppm (by volume)
+    %   NOx_ppm            : measured NOx concentration in ppm
     %   MW_Fuel            : Molar mass of the fuel (g/mol)
+    %   CO2_percent        : percentage of CO2 in exhaust gasses (%)
+    %   O2_percent         : measured percentage of O2 in exhaust gasses(%)
 
     % Outputs:
     %   KPIs : A struct containing:
@@ -21,8 +22,8 @@ function KPIs = CalculateKPIs(true_mfr_fuel, LHV, P, x, mfr_air, NOx_ppm, MW_Fue
     
     % Assumed exhaust gas composition for calculating M_exhaust
     % Ideally, these should come from measurements or given data.
-    CO2_frac = 4.7 / 100;    % Mole fraction of CO2
-    O2_frac  = 14.35 / 100;  % Mole fraction of O2
+    CO2_frac = CO2_percent;    % Mole fraction of CO2
+    O2_frac  = O2_percent;  % Mole fraction of O2
     N2_frac  = 1 - (CO2_frac + O2_frac); 
 
     M_CO2 = 44;  % g/mol

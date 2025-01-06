@@ -1,4 +1,4 @@
-function [dataIn, ExhaustData, Ca, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara)
+function [dataIn, ExhaustData, Ca, p, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara)
 
 rowIndex = find(strcmp(T.UniqueID, ID ));   % Find the row index for the desired ID
 averageCycleData = T.AverageCycleData{rowIndex};    % Extract the AverageCycleData for that row
