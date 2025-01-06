@@ -45,8 +45,6 @@ for rowIdx = 1:numGroups
     
     fprintf('Processing Group %d/%d: %s\n', rowIdx, numGroups, uniqueID);
     
-
-    
     % Extract averaged variables
     avgPressure = averageData.AvgPressure;   % Vector of average pressure values
     avgMassFlow = averageData.AvgMassFlow;   % Vector of average mass flow values
@@ -113,9 +111,9 @@ for rowIdx = 1:numGroups
     dp_dCA = diff(avgPressure) / resolution; 
     dV_dCA = diff(volume') / resolution; 
     % Calculate aROHR
-    aROHR_result = aROHR(avgPressure, volume', resolution, gamma, dp_dCA, dV_dCA);
+    aROHR_result = get_aROHR(avgPressure, volume', gamma);
     % Calculate aHR
-    aHR_result = aHR(aROHR_result, resolution); 
+    aHR_result = get_aHR(aROHR_result); 
  
     % Store the results
     aHR_all{rowIdx} = aHR_result; % Store aHR for each file
@@ -131,7 +129,7 @@ for rowIdx = 1:numGroups
     
 end
 colors = lines(height(T)); 
-%crank_angle_trimmed = crank_angle(1:end-1);
+crank_angle_trimmed = crank_angle(1:end-1);
 %% Loop to plot aHR
 figure;
 hold on;
@@ -159,7 +157,7 @@ for i = 1:length(aROHR_all)
 end
 xlabel('Crank Angle (°)');
 ylabel('Apparent Heat Release [J]');
-title('aHR for All Files');
+title('aROHR for All Files');
 legend('show');
 grid on;
 xlim([-45, 135]);

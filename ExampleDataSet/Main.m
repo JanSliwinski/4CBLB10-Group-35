@@ -1,6 +1,6 @@
 warning off
 %% Initialization
-if isempty(T)
+if ~exist("T","var")
     load('T.mat','T')
 end
 clearvars -except T; close all; clc
@@ -30,10 +30,17 @@ x_diesel = 12;      %carbon atoms in diesel
 x_GTL = 14;         %carbon atoms in GTL
 
 %% Load and Reshape data (also exhaust data)
+<<<<<<< HEAD
 ID = 'L50I14C0'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
 [dataIn, ExhaustData, Ca, p, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
 IDsforKPI = table({'L50I14C0', 'L50I15C0'}');
+=======
+ID = 'L50I17C50'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
+%run fucntion to load in all relevant data
+
+[dataIn, ExhaustData, Ca, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
+>>>>>>> 937314658e84fcb96e4feff74eafe12631e4d1d0
 
 %% Define Fuel used and calculate applicable LHV - CHANGE EVERY LINE IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
 fuel_used = 'Diesel';
@@ -50,7 +57,7 @@ x = x_blend * perc_blend + x_diesel * perc_diesel;
 global Runiv
 Runiv = 8.314; 
 
-[SpS, El] = myload('Nasa/NasaThermalDatabase.mat', {'Diesel', 'O2', 'N2', 'CO2', 'H2O'});
+[SpS, El] = myload('Nasa/NasaThermalDatabase.mat', {'N2', 'O2', 'CO2', 'H2O', 'Diesel'});
 
 %% Volume
 % Engine Geometry Parameters
@@ -62,6 +69,10 @@ Cyl.TDCangle = 180;                % Top Dead Center angle
 % Calculate cylinder volume using CylinderVolume function
 volume = CylinderVolume(Ca,Cyl);
 disp('Cylider volume calculated / cycle');
+
+%% Stoichiometric calculations
+[stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
+stoich_coeffs.fuel
 
 %% Detect Start and End of Injection from Sensor Current
 
@@ -138,13 +149,16 @@ plot(Ca(iselect), p(iselect) / bara, 'r', 'LineWidth', 2);
 set(gca, 'XTick', -360:60:360);
 grid on;
 
+<<<<<<< HEAD
 %% Calculate Average Volume and Pressure
 V_avg = mean(volume, 2);         % Average volume across all cycles for every CA
 p_avg = mean(p, 2);             % Average pressure across all cycles for every CA
 p_filtered_avg = mean(p, 2);
 
+=======
+>>>>>>> 937314658e84fcb96e4feff74eafe12631e4d1d0
 %% Calculate Work
-W = trapz(V_avg, p_avg); % Calculate the area under the averaged p-V curve
+W = trapz(volume, p_filt*1e5); % Calculate the area under the averaged p-V curve
 disp(['Calculated work: ', num2str(W), ' J']);
 
 %% Calculate mass flow of fuel
@@ -178,10 +192,14 @@ fuel_mass_flow_rate = fuel_molar_flow_rate * fuel_molar_mass; % in g/s
 % Result
 fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
 
+<<<<<<< HEAD
 %% Stoichiometric calculations for diesel
 fuel_name = 'Diesel';
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
 stoich_coeffs.fuel
+=======
+%% Calculate mass flow of air:
+>>>>>>> 937314658e84fcb96e4feff74eafe12631e4d1d0
 
 %% Stoichiometric Calculations for HVO
 m_fuel_per100cycles = 0.128; %(g)
@@ -205,19 +223,24 @@ Stoich_HVO50 = [a, b, q, k, e, g/2, k]; %Moles of each Component per 100 cycles
 
 
 %% aROHR
+<<<<<<< HEAD
 p_filt = sgolayfilt(p,2,101);
+=======
+p_filtRough = sgolayfilt(p_filt,2,101);
+>>>>>>> 937314658e84fcb96e4feff74eafe12631e4d1d0
 if exist('O2_percent_load','var')
-    gamma = CalculateGamma(SpS,RPM,volume,p_filt,O2_percent_load,CO2_percent_load,mfr_fuel);
+    gamma = CalculateGamma(SpS,volume,p_filtRough,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
 else
     gamma = 1.32; % constant if no exhuast data exist
 end
-aROHR = get_aROHR(p_filt,volume,gamma);
+aROHR = get_aROHR(p_filtRough,volume,gamma);
 % Isolate peak
-idxStart = 350 / 0.2; idxEnd = (30 + 360) / 0.2;
+idxStart = 355 / 0.2; idxEnd = (50 + 360) / 0.2;
 aROHR(1:idxStart) = 0; aROHR(idxEnd:end) = 0;
 aHR = get_aHR(aROHR);
 disp("aROHR and aHR computed successfully!")
 
+<<<<<<< HEAD
  figure;
  subplot(1,2,1)
  plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
@@ -227,6 +250,45 @@ disp("aROHR and aHR computed successfully!")
  plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
  xlim([-10,30]);
  legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
+=======
+figure;
+subplot(1,2,1)
+plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
+xlim([-5,50]);
+legend("aROHR","Location","southeast");title(["Apparent Rate of Heat", "Release for " + ID]);
+subplot(1,2,2)
+plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
+xlim([-5,50]);
+legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
+
+%% Calculate Heat of combustion and Temperature at exhaust - LHV way
+% [T_exh, Q_combustion_LHV, m_combusted] = Calc_Q_LHV(C_p, mfr_fuel, mfr_air, RPM, W, LHV, T_int);
+
+%% Calculate Heat of combustion and Temperature at exhaust - aROHR way
+%[Q_combustion_aROHR] = Calc_Q_aROHR(p_filt, V_all, Ca, ValveEvents, gamma);
+% disp(['Q combustion aROHR way: ', num2str(Q_combustion_aROHR), ' J']);
+
+%% Thermal efficiency of the engine
+% efficiency_LHV = (W / Q_combustion_LHV) *100; % efficiency for each cycle
+% disp(['Calculated average thermal efficiency(LHV): ', num2str(efficiency_LHV), ' %']);
+% 
+% efficiency_LHV = (W / Q_combustion_aROHR) *100; % efficiency for each cycle
+% disp(['Calculated average thermal efficiency(aROHR): ', num2str(efficiency_LHV), ' %']);
+
+%% Calculate thermodynamic properties for each cycle - THIS STILL NEEDS TO BE IMPLEMENTED PROPERLY - NEED TO CALCULAT T_EXHAUST FOR IT SOMEHOW 
+intake_species = [2, 3];           % Example species (O2 and N2)
+exhaust_species = [4, 5, 3];       % Example species (CO2, H2O, and N2)
+Y_int = [0.21, 0.79];              % Mole fractions for intake
+Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
+
+% % Call the function
+%[Delta_H_all, Delta_U_all, Delta_S_all] = ThermoProperties(T_int, T_exh, SpS, Ncycles, Ca, intake_species, exhaust_species, Y_int, Y_exh);
+ 
+% % Calculate averages
+% Delta_H_avg = mean(Delta_H_all, 2);
+% Delta_U_avg = mean(Delta_U_all, 2);
+% Delta_S_avg = mean(Delta_S_all, 2);
+>>>>>>> 937314658e84fcb96e4feff74eafe12631e4d1d0
 
 %% Key performance indicators
 % KPI data
