@@ -1,10 +1,10 @@
-% = ===========================================
-% MATLAB Script: Data Integration and Loading
+% ===========================================
+% MATLAB Script: Data Integration and Loading with FuelType
 % ============================================
 % This script loads experimental data TXT files and integrates additional
 % measurements from a separate CSV file. It organizes the data based
-% on Load (L), Intensity (I), and Composition (C) parameters for
-% efficient analysis. Additionally, it applies a Savitzky-Golay filter
+% on Load (L), Intensity (I), Composition (C), and FuelType (F) parameters
+% for efficient analysis. Additionally, it applies a Savitzky-Golay filter
 % to the Pressure data and stores the filtered results.
 %
 % Author: Ryan Sindic
@@ -16,10 +16,10 @@ clear; clc; close all;
 
 %% Define Paths
 % Specify the folder containing the renamed experiment data TXT files
-dataFolder = 'C:\Users\Kata\Desktop\TUE\3rd year\2nd quartile\Sustainable fuels DBL\Matlab\ExampleDataSet\AdjustedData'; % <-- Replace with your actual folder path
+dataFolder = 'ExampleDataSet/AdjustedData'; % <-- Replace with your actual folder path
 
 % Specify the path to the additional data CSV file
-additionalCSVPath = 'C:\Users\Kata\Desktop\TUE\3rd year\2nd quartile\Sustainable fuels DBL\Matlab\ExampleDataSet\CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
+additionalCSVPath = 'ExampleDataSet/CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
 
 % Verify that the data folder exists
 if ~isfolder(dataFolder)
@@ -46,8 +46,8 @@ catch ME
     error('Failed to read additional data CSV: %s', ME.message);
 end
 
-% Validate that the required columns exist
-requiredColumns = {'L', 'I', 'C', 'CO', 'HC', 'NOx', 'CO2', 'O2', 'Lambda'};
+% Validate that the required columns exist, now including FuelType
+requiredColumns = {'L', 'I', 'C', 'FuelType', 'CO', 'HC', 'NOx', 'CO2', 'O2', 'Lambda'};
 missingColumns = setdiff(requiredColumns, additionalDataTable.Properties.VariableNames);
 if ~isempty(missingColumns)
     error('The additional CSV file is missing the following required columns: %s', strjoin(missingColumns, ', '));
@@ -62,10 +62,20 @@ elseif ischar(additionalDataTable.Lambda) || isstring(additionalDataTable.Lambda
     additionalDataTable.Lambda = str2double(additionalDataTable.Lambda);
 end
 
-% Create a unique key for each row in the additional data
+% Handle missing FuelType values if necessary
+if iscell(additionalDataTable.FuelType)
+    % Example: Replace missing entries with 'Unknown' or another placeholder
+    additionalDataTable.FuelType(cellfun(@isempty, additionalDataTable.FuelType)) = {'Unknown'};
+elseif ischar(additionalDataTable.FuelType) || isstring(additionalDataTable.FuelType)
+    additionalDataTable.FuelType = string(additionalDataTable.FuelType);
+    additionalDataTable.FuelType(additionalDataTable.FuelType == "") = "Unknown";
+end
+
+% Create a unique key for each row in the additional data, now including FuelType
 additionalDataTable.UniqueKey = strcat('L', string(additionalDataTable.L), ...
                                       'I', string(additionalDataTable.I), ...
-                                      'C', string(additionalDataTable.C));
+                                      'C', string(additionalDataTable.C), ...
+                                      'Fuel', additionalDataTable.FuelType);
 
 % Initialize containers.Map for fast lookup
 try
@@ -93,8 +103,8 @@ end
 %% Initialize Data Storage
 % Initialize an empty cell array to store grouped data
 % Columns:
-% 1 - UniqueID (e.g., 'L2I25C30')
-% 2 - Metadata [L, I, C]
+% 1 - UniqueID (e.g., 'L2I25C30FuelHVO')
+% 2 - Metadata [L, I, C, FuelType]
 % 3 - ExperimentData (cell array of matrices containing Crank Angle, Pressure, Current, Mass Flow)
 % 4 - AdditionalData (struct)
 dataArray = {}; 
@@ -140,22 +150,24 @@ for i = 1:length(files)
     
     shortName = files(i).name;
     
-    % Parse the File Name to Extract L, I, and C Values
-    % Expected format: Ex{experiment}L{load}I{intensity}C{composition}.txt
+    % Parse the File Name to Extract L, I, C, and FuelType Values
+    % Expected format: Ex{experiment}L{load}I{intensity}C{composition}{FuelType}.txt
     L_token = regexp(shortName, 'L(\d+(\.\d+)?)', 'tokens', 'once');
     I_token = regexp(shortName, 'I(\d+(\.\d+)?)', 'tokens', 'once');
     C_token = regexp(shortName, 'C(\d+(\.\d+)?)', 'tokens', 'once');
+    Fuel_token = regexp(shortName, 'C\d+([A-Za-z]+)', 'tokens', 'once'); % Captures FuelType after C{composition}
     
     % Ensure all tokens were found
-    if isempty(L_token) || isempty(I_token) || isempty(C_token)
+    if isempty(L_token) || isempty(I_token) || isempty(C_token) || isempty(Fuel_token)
         fprintf('Skipping file %s: Filename does not match the expected pattern.\n', shortName);
         continue;
     end
     
-    % Convert extracted values from cell to numeric
+    % Convert extracted values from cell to numeric and string
     L_value = round(str2double(L_token{1}));
     I_value = round(str2double(I_token{1}));
     C_value = round(str2double(C_token{1}));
+    FuelType = Fuel_token{1};
     
     % Validate number of columns in fileData
     expectedCols = 4; % Crank Angle, Pressure, Current, Mass Flow
@@ -164,21 +176,22 @@ for i = 1:length(files)
         continue;
     end
     
-    % Create a unique identifier based on L, I, and C
-    uniqueID = sprintf('L%dI%dC%d', L_value, I_value, C_value);
+    % Create a unique identifier based on L, I, C, and FuelType
+    uniqueID = sprintf('L%dI%dC%dFuel%s', L_value, I_value, C_value, FuelType);
+    
+    % Create metadata as a structure
+    metadata = struct('L', L_value, 'I', I_value, 'C', C_value, 'FuelType', FuelType);
     
     % Check if this uniqueID already exists in dataArray
     if isempty(dataArray)
-        disp('before isempty')
         % dataArray is empty, add the first entry directly
         newRow = size(dataArray, 1) + 1;
         dataArray{newRow, 1} = uniqueID; % Store the unique identifier
-        dataArray{newRow, 2} = [L_value, I_value, C_value]; % Store metadata
+        dataArray{newRow, 2} = metadata; % Store metadata as a structure
         dataArray{newRow, 3} = {fileData}; % Initialize column 3 as a cell array with the first entry
         dataArray{newRow, 4} = {}; % Initialize column 4 as empty, to be filled later
         fprintf('Creating new group %s (first entry).\n', uniqueID);
     else
-         disp('after isempty')
         % dataArray is not empty, proceed to check for existing entries
         existingRow = find(strcmp({dataArray{:, 1}}, uniqueID));
         
@@ -196,7 +209,7 @@ for i = 1:length(files)
             % If the group doesn't exist, create a new row
             newRow = size(dataArray, 1) + 1;
             dataArray{newRow, 1} = uniqueID; % Store the unique identifier
-            dataArray{newRow, 2} = [L_value, I_value, C_value]; % Store metadata
+            dataArray{newRow, 2} = metadata; % Store metadata as a structure
             dataArray{newRow, 3} = {fileData}; % Initialize column 3 as a cell array with the first entry
             dataArray{newRow, 4} = {}; % Initialize column 4 as empty, to be filled later
             fprintf('Creating new group %s.\n', uniqueID);
@@ -238,12 +251,13 @@ catch ME
 end
 
 %% Assign Additional Data to Groups
-for rowIdx = 1:size(dataArray, 1)
-    currentL = dataArray{rowIdx, 2}(1);
-    currentI = dataArray{rowIdx, 2}(2);
-    currentC = dataArray{rowIdx, 2}(3);
+for rowIdx = 1:height(T)
+    currentL = T.Metadata(rowIdx).L;
+    currentI = T.Metadata(rowIdx).I;
+    currentC = T.Metadata(rowIdx).C;
+    currentFuelType = T.Metadata(rowIdx).FuelType;
     
-    uniqueKey = sprintf('L%dI%dC%d', currentL, currentI, currentC);
+    uniqueKey = sprintf('L%dI%dC%dFuel%s', currentL, currentI, currentC, currentFuelType);
     
     if isKey(additionalDataMap, uniqueKey)
         matchIdx = additionalDataMap(uniqueKey);
@@ -270,8 +284,8 @@ for rowIdx = 1:size(dataArray, 1)
         T.AdditionalData{rowIdx, 1} = additionalData;
     else
         % No matching additional data found
-        warning('No additional data found for group %s (L=%.1f, I=%.1f, C=%.1f).', ...
-                uniqueKey, currentL, currentI, currentC);
+        warning('No additional data found for group %s (L=%.1f, I=%.1f, C=%.1f, FuelType=%s).', ...
+                uniqueKey, currentL, currentI, currentC, currentFuelType);
         T.AdditionalData{rowIdx, 1} = NaN; % Assign NaN or another placeholder
     end
 end
@@ -298,7 +312,7 @@ for rowIdx = 1:height(T)
         
         % Apply the Savitzky-Golay filter
         try
-            yyFilt = SGFilter(pressureData, k, n, s); % Using existing SGFilter function
+            yyFilt = SGFilter(pressureData, k, n, 0); % Using MATLAB's built-in sgolayfilt function
             filteredPressureGroup{expIdx} = yyFilt;
         catch ME
             warning('Failed to filter Pressure data for group %s, experiment %d: %s', ...
@@ -318,7 +332,7 @@ fprintf('Completed applying Savitzky-Golay filter to all Pressure data.\n');
 
 %% Define Crank Angle Resolution and Cycle Parameters
 resolution = 0.2;  % Degrees crank angle resolution
-NdatapointsPerCycle = 720 / resolution; % Number of data points per cycle
+NdatapointsPerCycle = floor(720 / resolution); % Number of data points per cycle
 
 fprintf('Defined crank angle resolution: %.1f degrees.\n', resolution);
 fprintf('Number of data points per cycle: %d.\n', NdatapointsPerCycle);
@@ -403,8 +417,8 @@ fprintf('Completed computing average cycle data for all groups.\n');
 disp('Integrated Data Table:');
 disp(T(1:min(5, height(T)), :)); % Display first 5 rows
 
-%% Save T not to run it every time...
-save("T","T")
+%% Save the Table
+save("T", "T"); % Save the table to a MAT-file
 
 %% Cleanup
 % Optionally, shut down the parallel pool if no longer needed

@@ -30,19 +30,12 @@ x_diesel = 12;      %carbon atoms in diesel
 x_GTL = 14;         %carbon atoms in GTL
 
 %% Load and Reshape data (also exhaust data)
-<<<<<<< HEAD
-ID = 'L50I14C0'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
+ID = 'L50I14C0FuelHVO'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
 [dataIn, ExhaustData, Ca, p, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
-IDsforKPI = table({'L50I14C0', 'L50I15C0'}');
-=======
-ID = 'L50I17C50'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
-%run fucntion to load in all relevant data
+IDsforKPI = table({'L50I14C0FuelHVO', 'L50I15C0FuelHVO'}');
 
-[dataIn, ExhaustData, Ca, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
->>>>>>> 937314658e84fcb96e4feff74eafe12631e4d1d0
-
-%% Define Fuel used and calculate applicable LHV - CHANGE EVERY LINE IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
+%% Define Fuel used and applicable LHV - CHANGE EVERY LINE IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
 fuel_used = 'Diesel';
 perc_blend = 0; %fraction of the blended in fuel (HVO or GTL)
 x_blend = x_diesel;  %carbon atoms in the given fuel, can be: x_diesel, x_HVO or x_GTL
@@ -71,6 +64,7 @@ volume = CylinderVolume(Ca,Cyl);
 disp('Cylider volume calculated / cycle');
 
 %% Stoichiometric calculations
+fuel_name = 'Diesel';
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
 stoich_coeffs.fuel
 
@@ -149,14 +143,11 @@ plot(Ca(iselect), p(iselect) / bara, 'r', 'LineWidth', 2);
 set(gca, 'XTick', -360:60:360);
 grid on;
 
-<<<<<<< HEAD
 %% Calculate Average Volume and Pressure
 V_avg = mean(volume, 2);         % Average volume across all cycles for every CA
 p_avg = mean(p, 2);             % Average pressure across all cycles for every CA
 p_filtered_avg = mean(p, 2);
 
-=======
->>>>>>> 937314658e84fcb96e4feff74eafe12631e4d1d0
 %% Calculate Work
 W = trapz(volume, p_filt*1e5); % Calculate the area under the averaged p-V curve
 disp(['Calculated work: ', num2str(W), ' J']);
@@ -169,7 +160,7 @@ M_CO2 = 44; % Molar mass of CO2 (g/mol)
 mass_CH_ratio = 5.49; % Typical C/H mass ratio for diesel
 
 % Inputs: Known CO2 mass flow rate
-CO2_mass_flow_rate = 0.5; % IDK what this value is but Barrt Sommers says we should have it
+CO2_mass_flow_rate = 0.5; % IDK what this value is but Barrt Sommers says we should have it (we have the percentage of it but IDK how to get mfr from that)
 
 % Convert mass CH ratio to molar CH ratio
 molar_CH_ratio = mass_CH_ratio * (M_H / M_C);
@@ -192,14 +183,11 @@ fuel_mass_flow_rate = fuel_molar_flow_rate * fuel_molar_mass; % in g/s
 % Result
 fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
 
-<<<<<<< HEAD
+
 %% Stoichiometric calculations for diesel
 fuel_name = 'Diesel';
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
 stoich_coeffs.fuel
-=======
-%% Calculate mass flow of air:
->>>>>>> 937314658e84fcb96e4feff74eafe12631e4d1d0
 
 %% Stoichiometric Calculations for HVO
 m_fuel_per100cycles = 0.128; %(g)
@@ -223,11 +211,11 @@ Stoich_HVO50 = [a, b, q, k, e, g/2, k]; %Moles of each Component per 100 cycles
 
 
 %% aROHR
-<<<<<<< HEAD
+
 p_filt = sgolayfilt(p,2,101);
-=======
+
 p_filtRough = sgolayfilt(p_filt,2,101);
->>>>>>> 937314658e84fcb96e4feff74eafe12631e4d1d0
+
 if exist('O2_percent_load','var')
     gamma = CalculateGamma(SpS,volume,p_filtRough,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
 else
@@ -240,7 +228,7 @@ aROHR(1:idxStart) = 0; aROHR(idxEnd:end) = 0;
 aHR = get_aHR(aROHR);
 disp("aROHR and aHR computed successfully!")
 
-<<<<<<< HEAD
+
  figure;
  subplot(1,2,1)
  plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
@@ -250,7 +238,7 @@ disp("aROHR and aHR computed successfully!")
  plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
  xlim([-10,30]);
  legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
-=======
+
 figure;
 subplot(1,2,1)
 plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
@@ -288,7 +276,7 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 % Delta_H_avg = mean(Delta_H_all, 2);
 % Delta_U_avg = mean(Delta_U_all, 2);
 % Delta_S_avg = mean(Delta_S_all, 2);
->>>>>>> 937314658e84fcb96e4feff74eafe12631e4d1d0
+
 
 %% Key performance indicators
 % KPI data

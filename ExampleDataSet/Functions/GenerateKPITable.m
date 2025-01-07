@@ -16,7 +16,7 @@ function KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_
 %   KPITable           : Table containing calculated KPIs for each dataset.
 
     %% Initialize KPI Table
-    n_rows = 7;
+    n_rows = height(IDsforKPI);
     KPITable = table(...
     strings(n_rows, 1), ...          % FuelType as string array
     zeros(n_rows, 1), ...            % CrankAngle
