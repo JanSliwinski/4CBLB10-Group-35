@@ -1,3 +1,8 @@
+%% Process experimental data
+folderpath = 'ExampleDataSet/Data/session1_Raw/load5'; % path to raw data
+outputfilePath = 'ExampleDataSet/Data/processed_Data_experiment1_load5.txt'; % path to output file
+averagedata = AverageExperimentData(folderpath, outputfilePath); % run function averaging relevant data
+
 
 %% %% Everything Related to aHR and aROHR
 %% Rate of changes, Pressure and Volume
