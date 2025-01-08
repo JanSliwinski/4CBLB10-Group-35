@@ -32,7 +32,7 @@ x_GTL = 14;         %carbon atoms in GTL
 %% Load and Reshape data (also exhaust data)
 ID = 'L50I14C0FuelHVO'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
-[dataIn, ExhaustData, Ca, p, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
+[dataIn, ExhaustData, Ca, p_filt, p_avg, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
 IDsforKPI = table({'L50I14C0FuelHVO', 'L50I15C0FuelHVO'}');
 
 %% Define Fuel used and applicable LHV - CHANGE EVERY LINE IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
@@ -122,7 +122,7 @@ true_mfr_fuel = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, threshold);
 
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
-plot(Ca, p / bara, 'LineWidth', 1);
+plot(Ca, p_filt / bara, 'LineWidth', 1);
 xlabel('Crank Angle (°)');
 ylabel('Pressure (bar)');
 xlim([-360, 360]);
@@ -133,7 +133,7 @@ grid on;
 % Highlight a specific cycle
 iselect = 10;
 hold on;
-plot(Ca(iselect), p(iselect) / bara, 'r', 'LineWidth', 2);
+plot(Ca(iselect), p_filt(iselect) / bara, 'r', 'LineWidth', 2);
 
 % Plot valve events
 % YLIM = ylim;
@@ -143,13 +143,13 @@ plot(Ca(iselect), p(iselect) / bara, 'r', 'LineWidth', 2);
 set(gca, 'XTick', -360:60:360);
 grid on;
 
-%% Calculate Average Volume and Pressure
-V_avg = mean(volume, 2);         % Average volume across all cycles for every CA
-p_avg = mean(p, 2);             % Average pressure across all cycles for every CA
-p_filtered_avg = mean(p, 2);
+% %% Calculate Average Volume and Pressure
+% V_avg = mean(volume, 2);         % Average volume across all cycles for every CA
+% p_avg = mean(p_filt, 2);             % Average pressure across all cycles for every CA
+% p_filtered_avg = mean(p, 2);
 
 %% Calculate Work
-W = trapz(volume, p_filt*1e5); % Calculate the area under the averaged p-V curve
+W = trapz(volume, p_avg*1e5); % Calculate the area under the averaged p-V curve
 disp(['Calculated work: ', num2str(W), ' J']);
 
 %% Calculate mass flow of fuel
@@ -212,16 +212,16 @@ Stoich_HVO50 = [a, b, q, k, e, g/2, k]; %Moles of each Component per 100 cycles
 
 %% aROHR
 
-p_filt = sgolayfilt(p,2,101);
+%p_filt = sgolayfilt(p,2,101);
 
-p_filtRough = sgolayfilt(p_filt,2,101);
+%p_filtRough = sgolayfilt(p_filt,2,101);
 
 if exist('O2_percent_load','var')
-    gamma = CalculateGamma(SpS,volume,p_filtRough,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
+    gamma = CalculateGamma(SpS,volume,p_avg,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
 else
     gamma = 1.32; % constant if no exhuast data exist
 end
-aROHR = get_aROHR(p_filtRough,volume,gamma);
+aROHR = get_aROHR(p_avg,volume,gamma);
 % Isolate peak
 idxStart = 355 / 0.2; idxEnd = (50 + 360) / 0.2;
 aROHR(1:idxStart) = 0; aROHR(idxEnd:end) = 0;
@@ -293,8 +293,8 @@ disp(KPITable)
 %% Compare Raw and Filtered Pressure Data for a Single Cycle
 figure;
 hold on;
-plot(Ca(:, iselect), p(:, iselect) / bara, 'DisplayName', 'Raw Data');
-plot(Ca(:, iselect), p(:, iselect) / bara, 'DisplayName', 'Filtered Data');
+plot(Ca(:, 1), p_filt(:, 1) / bara, 'DisplayName', 'Raw Data');
+plot(Ca(:, 1), p_avg(:, 1) / bara, 'DisplayName', 'Filtered Data');
 xlabel('Crank Angle (°)');
 ylabel('Pressure [bar]');
 title(['Comparison of Raw and Filtered Pressure Data (Cycle ', num2str(iselect), ')']);
