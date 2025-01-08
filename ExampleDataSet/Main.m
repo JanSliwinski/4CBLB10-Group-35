@@ -32,7 +32,7 @@ x_GTL = 14;         %carbon atoms in GTL
 %% Load and Reshape data (also exhaust data)
 ID = 'L50I14C0FuelHVO'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
-[dataIn, ExhaustData, Ca, p_filt, p_avg, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
+[dataIn, ExhaustData, Ca, p_avg, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
 IDsforKPI = table({'L50I14C0FuelHVO', 'L50I15C0FuelHVO'}');
 
 %% Define Fuel used and applicable LHV - CHANGE EVERY LINE IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
@@ -212,7 +212,7 @@ Stoich_HVO50 = [a, b, q, k, e, g/2, k]; %Moles of each Component per 100 cycles
 
 %% aROHR
 
-%p_filt = sgolayfilt(p,2,101);
+%p_avg = sgolayfilt(p_avg,2,101);
 
 %p_filtRough = sgolayfilt(p_filt,2,101);
 

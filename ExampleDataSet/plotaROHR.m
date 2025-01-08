@@ -64,19 +64,20 @@ for rowIdx = 1:numGroups
         uniqueID = T.UniqueID{rowIdx};
         metadata = T.Metadata(rowIdx, :);
         averageData = T.AverageCycleData{rowIdx};
+   
         
         fprintf('Processing Group %d/%d: %s\n', rowIdx, numGroups, uniqueID);
         
-        [dataIn, ExhaustData, Ca, p_filt, S_current, mfr_fuel, ...
+        [dataIn, ExhaustData, Ca, p_filt, p_avg, S_current, mfr_fuel, ...
          CO_percent_load, HC_ppm_load, NOx_ppm_load, ...
          CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, uniqueID, bara);
         
         true_mfr_fuel = mean(mfr_fuel);
-        p_filtRough = sgolayfilt(p_filt, 2,15);
+        %p_filtRough = sgolayfilt(p_filt, 2,15);
 
-        gamma = CalculateGamma(SpS,volume,p_filtRough,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
+        gamma = CalculateGamma(SpS,volume,p_filt,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
         % Calculate ROHR and HR
-        aROHR = get_aROHR(p_filtRough, volume, gamma);
+        aROHR = get_aROHR(p_filt, volume, gamma);
         
         % Isolate peak
         idxStart = 355 / 0.2;
@@ -111,7 +112,7 @@ hold on;
 for i = 1:length(aROHR_all)
     if ~isempty(aROHR_all{i})
         uniqueID = T.UniqueID{i};
-        plot(Ca, aROHR_all{i}, 'LineWidth', 1.5, 'DisplayName', sprintf(' %d', uniqueID));
+        plot(Ca, aROHR_all{i}, 'LineWidth', 0.5, 'DisplayName', sprintf(' %d', uniqueID));
     end
 end
 xlabel('Crank Angle (°)');
@@ -129,7 +130,7 @@ hold on;
 for i = 1:length(aHR_all)    % Changed from aROHR_all to aHR_all
     if ~isempty(aHR_all{i})  % Changed from aROHR_all to aHR_all
         uniqueID = T.UniqueID{i};
-        plot(Ca, aHR_all{i}, 'LineWidth', 1.5, 'DisplayName', sprintf(' %d', uniqueID));  % Changed from aROHR_all to aHR_all
+        plot(Ca, aHR_all{i}, 'LineWidth', 0.5, 'DisplayName', sprintf(' %d', uniqueID));  % Changed from aROHR_all to aHR_all
     end
 end
 xlabel('Crank Angle (°)');
