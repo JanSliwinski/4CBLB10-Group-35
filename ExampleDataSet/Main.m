@@ -211,11 +211,6 @@ Stoich_HVO50 = [a, b, q, k, e, g/2, k]; %Moles of each Component per 100 cycles
 
 
 %% aROHR
-
-%p_avg = sgolayfilt(p_avg,2,101);
-
-%p_filtRough = sgolayfilt(p_filt,2,101);
-
 if exist('O2_percent_load','var')
     gamma = CalculateGamma(SpS,volume,p_avg,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
 else

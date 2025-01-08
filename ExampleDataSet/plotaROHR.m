@@ -54,6 +54,9 @@ disp('Cylider volume calculated / cycle');
 stoich_coeffs.fuel
 
 %% Loop Through All Groups in Table T
+
+
+
 numGroups = height(T);
 fprintf('Starting to plot data for %d groups.\n', numGroups);
 ID = [];
@@ -64,14 +67,14 @@ for rowIdx = 1:numGroups
         uniqueID = T.UniqueID{rowIdx};
         metadata = T.Metadata(rowIdx, :);
         averageData = T.AverageCycleData{rowIdx};
-   
+        
         
         fprintf('Processing Group %d/%d: %s\n', rowIdx, numGroups, uniqueID);
         
         [dataIn, ExhaustData, Ca, p_filt, p_avg, S_current, mfr_fuel, ...
          CO_percent_load, HC_ppm_load, NOx_ppm_load, ...
          CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, uniqueID, bara);
-        
+        p_avg = averageData.AvgPressure;
         true_mfr_fuel = mean(mfr_fuel);
         %p_filtRough = sgolayfilt(p_filt, 2,15);
 
