@@ -16,10 +16,10 @@ clear; clc; close all;
 
 %% Define Paths
 % Specify the folder containing the renamed experiment data TXT files
-dataFolder = 'AdjustedData'; % <-- Replace with your actual folder path
+dataFolder = 'ExampleDataSet/AdjustedData'; % <-- Replace with your actual folder path
 
 % Specify the path to the additional data CSV file
-additionalCSVPath = 'CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
+additionalCSVPath = 'ExampleDataSet/CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
 
 % Verify that the data folder exists
 if ~isfolder(dataFolder)
@@ -111,13 +111,13 @@ dataArray = {};
 
 %% Load Experiment Data with Parallel Processing
 % Initialize a parallel pool if not already open
-% pool = gcp('nocreate'); % If no pool, do not create new one
-% if isempty(pool)
-%     parpool; % Opens the default parallel pool
-%     fprintf('Opened a new parallel pool.\n');
-% else
-%     fprintf('Using existing parallel pool.\n');
-% end
+pool = gcp('nocreate'); % If no pool, do not create new one
+if isempty(pool)
+    parpool; % Opens the default parallel pool
+    fprintf('Opened a new parallel pool.\n');
+else
+    fprintf('Using existing parallel pool.\n');
+end
 
 % Preallocate cell array for experiment data
 experimentDataCell = cell(length(files), 1);
@@ -131,7 +131,7 @@ parfor i = 1:length(files)
         tempData = readmatrix(fileName, ...
                               'Delimiter', ' ', ...
                               'MultipleDelimsAsOne', true);
-        
+
         % Assign to cell array
         experimentDataCell{i} = tempData;
     catch ME
@@ -147,41 +147,41 @@ for i = 1:length(files)
         fprintf('Skipping file %s: Failed to load data.\n', files(i).name);
         continue; % Skip files that failed to load
     end
-    
+
     shortName = files(i).name;
-    
+
     % Parse the File Name to Extract L, I, C, and FuelType Values
     % Expected format: Ex{experiment}L{load}I{intensity}C{composition}{FuelType}.txt
     L_token = regexp(shortName, 'L(\d+(\.\d+)?)', 'tokens', 'once');
     I_token = regexp(shortName, 'I(\d+(\.\d+)?)', 'tokens', 'once');
     C_token = regexp(shortName, 'C(\d+(\.\d+)?)', 'tokens', 'once');
     Fuel_token = regexp(shortName, 'C\d+([A-Za-z]+)', 'tokens', 'once'); % Captures FuelType after C{composition}
-    
+
     % Ensure all tokens were found
     if isempty(L_token) || isempty(I_token) || isempty(C_token) || isempty(Fuel_token)
         fprintf('Skipping file %s: Filename does not match the expected pattern.\n', shortName);
         continue;
     end
-    
+
     % Convert extracted values from cell to numeric and string
     L_value = round(str2double(L_token{1}));
     I_value = round(str2double(I_token{1}));
     C_value = round(str2double(C_token{1}));
     FuelType = Fuel_token{1};
-    
+
     % Validate number of columns in fileData
     expectedCols = 4; % Crank Angle, Pressure, Current, Mass Flow
     if size(fileData, 2) ~= expectedCols
         fprintf('Skipping file %s: Expected %d columns, found %d columns.\n', shortName, expectedCols, size(fileData, 2));
         continue;
     end
-    
+
     % Create a unique identifier based on L, I, C, and FuelType
     uniqueID = sprintf('L%dI%dC%dFuel%s', L_value, I_value, C_value, FuelType);
-    
+
     % Create metadata as a structure
     metadata = struct('L', L_value, 'I', I_value, 'C', C_value, 'FuelType', FuelType);
-    
+
     % Check if this uniqueID already exists in dataArray
     if isempty(dataArray)
         % dataArray is empty, add the first entry directly
@@ -194,7 +194,7 @@ for i = 1:length(files)
     else
         % dataArray is not empty, proceed to check for existing entries
         existingRow = find(strcmp({dataArray{:, 1}}, uniqueID));
-        
+
         if ~isempty(existingRow)
             % If the group exists, append the data to the existing entry in column 3
             if iscell(dataArray{existingRow, 3})
@@ -256,18 +256,18 @@ for rowIdx = 1:height(T)
     currentI = T.Metadata(rowIdx).I;
     currentC = T.Metadata(rowIdx).C;
     currentFuelType = T.Metadata(rowIdx).FuelType;
-    
+
     uniqueKey = sprintf('L%dI%dC%dFuel%s', currentL, currentI, currentC, currentFuelType);
-    
+
     if isKey(additionalDataMap, uniqueKey)
         matchIdx = additionalDataMap(uniqueKey);
-        
+
         % Handle multiple matches if necessary
         if length(matchIdx) > 1
             warning('Multiple matches found for group %s. Using the first match.', uniqueKey);
             matchIdx = matchIdx(1);
         end
-        
+
         % Extract additional data columns
         CO = additionalDataTable.CO(matchIdx);
         HC = additionalDataTable.HC(matchIdx);
@@ -275,11 +275,11 @@ for rowIdx = 1:height(T)
         CO2 = additionalDataTable.CO2(matchIdx);
         O2 = additionalDataTable.O2(matchIdx);
         Lambda = additionalDataTable.Lambda(matchIdx);
-        
+
         % Store the additional data as a struct
         additionalData = struct('CO', CO, 'HC', HC, 'NOx', NOx, ...
                                 'CO2', CO2, 'O2', O2, 'Lambda', Lambda);
-        
+
         % Assign to column 4
         T.AdditionalData{rowIdx, 1} = additionalData;
     else
@@ -300,46 +300,30 @@ fprintf('Applying Savitzky-Golay filter to Pressure data...\n');
 for rowIdx = 1:height(T)
     % Retrieve all ExperimentData matrices for the current group
     experiments = T.ExperimentData{rowIdx};
-    
+
     % Initialize a cell array to store filtered pressure data for this group
     filteredPressureGroup = cell(size(experiments));
-    
+
     for expIdx = 1:length(experiments)
         fileData = experiments{expIdx};
-        
+
         % Extract Pressure data (assuming Pressure is the second column)
         pressureData = fileData(:, 2);
-        
+
         % Apply the Savitzky-Golay filter
         try
             yyFilt = SGFilter(pressureData, k, n, 0); % Using MATLAB's built-in sgolayfilt function
-
-            % Adjust per cycle
-            for magic3 = 0:99 
-                startIDX = 3600*magic3+1; 
-                endIDX = 3600*(magic3+1);
-                midIDX = round((startIDX + endIDX) / 2);
-    
-                if yyFilt(midIDX,2) < 10
-                    yyFilt(startIDX:endIDX,:) = NaN;
-                else
-                    bias = min(yyFilt(startIDX:endIDX,2));
-                    yyFilt(startIDX:endIDX,2) = yyFilt(startIDX:endIDX,2) - bias + 1;
-                end
-            end
-
             filteredPressureGroup{expIdx} = yyFilt;
-
         catch ME
             warning('Failed to filter Pressure data for group %s, experiment %d: %s', ...
                     T.UniqueID{rowIdx}, expIdx, ME.message);
             filteredPressureGroup{expIdx} = NaN; % Assign NaN if filtering fails
         end
     end
-    
+
     % Assign the filtered Pressure data to the FilteredPressure column
     T.FilteredPressure{rowIdx, 1} = filteredPressureGroup;
-    
+
     if mod(rowIdx, 10) == 0 || rowIdx == height(T)
         fprintf('Processed %d/%d groups.\n', rowIdx, height(T));
     end
@@ -364,36 +348,36 @@ for rowIdx = 1:height(T)
     % Retrieve all ExperimentData matrices and their corresponding filtered pressures
     experiments = T.ExperimentData{rowIdx};
     filteredPressures = T.FilteredPressure{rowIdx};
-    
+
     % Initialize accumulators for sum
     sumPressure = zeros(NdatapointsPerCycle, 1);
     sumMassFlow = zeros(NdatapointsPerCycle, 1);
     sumCurrent = zeros(NdatapointsPerCycle, 1);
     cycleCount = 0;
-    
+
     for expIdx = 1:length(experiments)
         fileData = experiments{expIdx};
         filteredPressure = filteredPressures{expIdx};
-        
+
         % Determine the number of complete cycles in the data
         Nrows = size(fileData, 1);
         Ncycles = floor(Nrows / NdatapointsPerCycle);
-        
+
         for cycle = 1:Ncycles
             startIdx = (cycle-1)*NdatapointsPerCycle + 1;
             endIdx = cycle * NdatapointsPerCycle;
-            
+
             % Extract data for the current cycle
             try
                 pressureCycle = filteredPressure(startIdx:endIdx);
                 massFlowCycle = fileData(startIdx:endIdx, 4);
                 currentCycle = fileData(startIdx:endIdx, 3);
-                
+
                 % Accumulate the data
                 sumPressure = sumPressure + pressureCycle;
                 sumMassFlow = sumMassFlow + massFlowCycle;
                 sumCurrent = sumCurrent + currentCycle;
-                
+
                 cycleCount = cycleCount + 1;
             catch ME
                 warning('Failed to process cycle %d in group %s, experiment %d: %s', ...
@@ -402,13 +386,13 @@ for rowIdx = 1:height(T)
             end
         end
     end
-    
+
     if cycleCount > 0
         % Compute the average values
         avgPressure = sumPressure / cycleCount;
         avgMassFlow = sumMassFlow / cycleCount;
         avgCurrent = sumCurrent / cycleCount;
-        
+
         % Store the averaged data in a struct
         averageData = struct('AvgPressure', avgPressure, ...
                              'AvgMassFlow', avgMassFlow, ...
@@ -418,10 +402,10 @@ for rowIdx = 1:height(T)
         averageData = NaN;
         warning('No complete cycles found for group %s. AverageCycleData set to NaN.', T.UniqueID{rowIdx});
     end
-    
+
     % Assign the averaged data to the new column
     T.AverageCycleData{rowIdx, 1} = averageData;
-    
+
     if mod(rowIdx, 10) == 0 || rowIdx == height(T)
         fprintf('Processed %d/%d groups.\n', rowIdx, height(T));
     end
