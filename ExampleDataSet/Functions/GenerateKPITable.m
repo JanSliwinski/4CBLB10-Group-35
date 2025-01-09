@@ -1,4 +1,4 @@
-function KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel, Cyl)
+function KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel, Cyl, fuel_used)
 %GENERATEKPITABLE Loads multiple datasets, calculates KPIs, and generates a summary table.
 %
 % Inputs:
@@ -36,7 +36,7 @@ function KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_
         data_file_name = IDsforKPI{i,1};
     
         % Extract fuel type (example logic, adjust as needed)
-        fuel_type = 'Diesel'; % Example: HVO50
+        fuel_type = fuel_used; % Example: HVO50
     
         % Load Data
         rowIndex = find(strcmp(T.UniqueID, data_file_name));   % Find the row index for the desired ID

@@ -30,16 +30,16 @@ x_diesel = 12;      %carbon atoms in diesel
 x_GTL = 14;         %carbon atoms in GTL
 
 %% Load and Reshape data (also exhaust data)
-ID = 'L50I14C0FuelHVO'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
+ID = 'L50I14C50FuelGTL'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
 [dataIn, ExhaustData, Ca, p, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
-IDsforKPI = table({'L50I14C0FuelHVO', 'L50I15C0FuelHVO'}');
+IDsforKPI = table({'L50I14C50FuelGTL'}');
 
 %% Define Fuel used and applicable LHV - CHANGE EVERY LINE IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
-fuel_used = 'Diesel';
-perc_blend = 0; %fraction of the blended in fuel (HVO or GTL)
-x_blend = x_diesel;  %carbon atoms in the given fuel, can be: x_diesel, x_HVO or x_GTL
-LHV_blend = LHV_diesel;
+fuel_used = 'GTL50';
+perc_blend = 0.5; %fraction of the blended in fuel (HVO or GTL)
+x_blend = x_GTL;  %carbon atoms in the given fuel, can be: x_diesel, x_HVO or x_GTL
+LHV_blend = LHV_GTL;
 
 %% Calculate LHV and x for the fuel used
 perc_diesel = 1-perc_blend;
@@ -286,7 +286,7 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 MW_fuel = M_HVO;
 % KPIdataFiles = HVO60_raw_dataFiles;
 % Generate KPI table
-KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl);
+KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl, fuel_used);
 disp(KPITable)
 
 
