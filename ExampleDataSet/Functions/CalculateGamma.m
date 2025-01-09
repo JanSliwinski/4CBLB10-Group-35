@@ -9,7 +9,7 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mf
         validateInput(pressure, 'pressure');
         validateInput(O2percent, 'O2percent');
         validateInput(CO2percent, 'CO2percent');
-        validateInput(mfr_fuel, 'true_mfr_fuel');
+        validateInput(mfr_fuel, 'mfr_fuel');
         validateInput(AFR, 'AFR_stoich');
         validateInput(RPM, 'RPM');
         
@@ -26,7 +26,7 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mf
         assert(all(CO2percent >= 0 & CO2percent <= 100), 'Error: CO2percent must be between 0 and 100');
         assert(all(RPM > 0), 'Error: RPM must be positive');
         assert(all(AFR > 0), 'Error: AFR_stoich must be positive');
-        assert(all(mfr_fuel > 0), 'Error: true_mfr_fuel must be positive');
+        assert(all(mfr_fuel > 0), 'Error: mfr_fuel must be positive');
         
         %% Constants
         Rair = 287;   % Specific gas constant for air [J/(kg·K)]
@@ -55,7 +55,7 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mf
         
         % Convert fuel mass flow from mg/s to kg/cycle
         massAir = (mfr_fuel/1000) / cyclesPerSecond * AFR;
-        assert(massAir > 0, 'Error: Calculated air mass is not positive');
+        %assert(massAir > 0, 'Error: Calculated air mass is not positive');
         
         %% Gas constant calculations
         molarMass = [SpS.Mass];

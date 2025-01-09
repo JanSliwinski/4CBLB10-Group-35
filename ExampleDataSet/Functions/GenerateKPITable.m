@@ -1,4 +1,4 @@
-function KPITable = GenerateKPITable(IDsforKPI, mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel, Cyl,)
+function KPITable = GenerateKPITable(IDsforKPI, mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel, Cyl, fuel_used)
 
 %GENERATEKPITABLE Loads multiple datasets, calculates KPIs, and generates a summary table.
 %

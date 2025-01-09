@@ -31,16 +31,17 @@ x_GTL = 14;         %carbon atoms in GTL
 
 %% Load and Reshape data (also exhaust data)
 
-ID = 'L50I14C50FuelGTL'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
+ID = 'L50I14C0FuelHVO'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
 [dataIn, ExhaustData, Ca, p, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
-IDsforKPI = table({'L50I14C50FuelGTL'}');
+IDsforKPI = table({'L50I14C0FuelHVO'}');
 
-%% Define Fuel used and applicable LHV - CHANGE EVERY LINE IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
-fuel_used = 'GTL50';
-perc_blend = 0.5; %fraction of the blended in fuel (HVO or GTL)
-x_blend = x_GTL;  %carbon atoms in the given fuel, can be: x_diesel, x_HVO or x_GTL
-LHV_blend = LHV_GTL;
+%% Define Fuel used and applicable LHV - CHANGE THE LINES IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
+fuel_used = 'Diesel';
+perc_blend = 0; %fraction of the blended in fuel (HVO or GTL) should be set to 0 if you are using diesel
+x_blend = x_diesel;  %carbon atoms in the given fuel, can be: x_diesel, x_HVO or x_GTL
+LHV_blend = LHV_diesel; %LHV of the given fuel, can be: LHV_diesel, LHV_HVO or LHV_GTL
+MW_fuel = M_diesel; %keep this on M_diesel I think
 
 %% Calculate LHV and x for the fuel used
 perc_diesel = 1-perc_blend;
@@ -144,8 +145,8 @@ set(gca, 'XTick', -360:60:360);
 grid on;
 
 % %% Calculate Average Volume and Pressure
-% V_avg = mean(volume, 2);         % Average volume across all cycles for every CA
-% p_avg = mean(p_filt, 2);             % Average pressure across all cycles for every CA
+ V_avg = mean(volume, 2);         % Average volume across all cycles for every CA
+p_avg = mean(p_filt, 2);             % Average pressure across all cycles for every CA
 % p_filtered_avg = mean(p, 2);
 
 %% Calculate Work
@@ -245,15 +246,9 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 % KPI data
 % Format: data file, fuel, crank angle
 
-% The selected fuel
-MW_fuel = M_HVO;
-% KPIdataFiles = HVO60_raw_dataFiles;
+
 % Generate KPI table
-<<<<<<< HEAD
-KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl, fuel_used);
-=======
-KPITable = GenerateKPITable(IDsforKPI, mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl);
->>>>>>> 515bef49f6e9a2434d4968e4ebf59f02227fd86d
+KPITable = GenerateKPITable(IDsforKPI, mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl, fuel_used);
 disp(KPITable)
 
 
