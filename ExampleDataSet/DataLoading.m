@@ -16,10 +16,10 @@ clear; clc; close all;
 
 %% Define Paths
 % Specify the folder containing the renamed experiment data TXT files
-dataFolder = 'ExampleDataSet/AdjustedData'; % <-- Replace with your actual folder path
+dataFolder = 'AdjustedData'; % <-- Replace with your actual folder path
 
 % Specify the path to the additional data CSV file
-additionalCSVPath = 'ExampleDataSet/CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
+additionalCSVPath = 'CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
 
 % Verify that the data folder exists
 if ~isfolder(dataFolder)
@@ -111,13 +111,13 @@ dataArray = {};
 
 %% Load Experiment Data with Parallel Processing
 % Initialize a parallel pool if not already open
-pool = gcp('nocreate'); % If no pool, do not create new one
-if isempty(pool)
-    parpool; % Opens the default parallel pool
-    fprintf('Opened a new parallel pool.\n');
-else
-    fprintf('Using existing parallel pool.\n');
-end
+% pool = gcp('nocreate'); % If no pool, do not create new one
+% if isempty(pool)
+%     parpool; % Opens the default parallel pool
+%     fprintf('Opened a new parallel pool.\n');
+% else
+%     fprintf('Using existing parallel pool.\n');
+% end
 
 % Preallocate cell array for experiment data
 experimentDataCell = cell(length(files), 1);
@@ -313,7 +313,23 @@ for rowIdx = 1:height(T)
         % Apply the Savitzky-Golay filter
         try
             yyFilt = SGFilter(pressureData, k, n, 0); % Using MATLAB's built-in sgolayfilt function
+
+            % Adjust per cycle
+            for magic3 = 0:99 
+                startIDX = 3600*magic3+1; 
+                endIDX = 3600*(magic3+1);
+                midIDX = round((startIDX + endIDX) / 2);
+    
+                if yyFilt(midIDX,2) < 10
+                    yyFilt(startIDX:endIDX,:) = NaN;
+                else
+                    bias = min(yyFilt(startIDX:endIDX,2));
+                    yyFilt(startIDX:endIDX,2) = yyFilt(startIDX:endIDX,2) - bias + 1;
+                end
+            end
+
             filteredPressureGroup{expIdx} = yyFilt;
+
         catch ME
             warning('Failed to filter Pressure data for group %s, experiment %d: %s', ...
                     T.UniqueID{rowIdx}, expIdx, ME.message);
