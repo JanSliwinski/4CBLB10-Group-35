@@ -4,7 +4,7 @@ if ~exist("T","var")
     load('T.mat','T')
 end
 clearvars -except T; close all; clc
-addpath("Functions", "Nasa");  % Add necessary paths
+addpath("Functions", "Nasa");savepath  % Add necessary paths
 % figure('Visible', 'on');
 %% Units and Constants
 mm = 1e-3;
@@ -30,7 +30,7 @@ x_diesel = 12;      %carbon atoms in diesel
 x_GTL = 14;         %carbon atoms in GTL
 
 %% Load and Reshape data (also exhaust data)
-ID = 'L50I14C0FuelHVO'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
+ID = 'L50I20C50HVO'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
 [dataIn, ExhaustData, Ca, p_avg, p_filt, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
 IDsforKPI = table({'L50I14C0FuelHVO', 'L50I15C0FuelHVO'}');
@@ -66,7 +66,8 @@ disp('Cylider volume calculated / cycle');
 %% Stoichiometric calculations
 fuel_name = 'Diesel';
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
-stoich_coeffs.fuel
+mfr_air = CalculateMassFlowAir(O2_percent_load,mfr_fuel,AFR_stoich);
+AFR = mfr_air / mfr_fuel;
 
 %% Detect Start and End of Injection from Sensor Current
 
@@ -118,8 +119,6 @@ text(injection_end_ca, S_current_avg(injection_end_idx), sprintf('End: %.2f°', 
 
 hold off;
 
-true_mfr_fuel = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, threshold);
-
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
 plot(Ca, p_filt / bara, 'LineWidth', 1);
@@ -152,38 +151,6 @@ grid on;
 W = trapz(volume, p_avg*1e5); % Calculate the area under the averaged p-V curve
 disp(['Calculated work: ', num2str(W), ' J']);
 
-%% Calculate mass flow of fuel
-% Constants
-M_C = 12; % Molar mass of Carbon (g/mol)
-M_H = 1; % Molar mass of Hydrogen (g/mol)
-M_CO2 = 44; % Molar mass of CO2 (g/mol)
-mass_CH_ratio = 5.49; % Typical C/H mass ratio for diesel
-
-% Inputs: Known CO2 mass flow rate
-CO2_mass_flow_rate = 0.5; % IDK what this value is but Barrt Sommers says we should have it (we have the percentage of it but IDK how to get mfr from that)
-
-% Convert mass CH ratio to molar CH ratio
-molar_CH_ratio = mass_CH_ratio * (M_H / M_C);
-
-% Determine y for the given fuel (x is given above) 
-y = molar_CH_ratio * x;
-
-% Calculate molar mass of diesel (CxHy)
-fuel_molar_mass = x * M_C + y * M_H; % in g/mol
-
-% Convert CO2 mass flow rate to molar flow rate
-CO2_molar_flow_rate = CO2_mass_flow_rate / M_CO2; % in mol/s
-
-% Determine the molar flow rate of diesel
-fuel_molar_flow_rate = CO2_molar_flow_rate / x;
-
-% Convert diesel molar flow rate to mass flow rate
-fuel_mass_flow_rate = fuel_molar_flow_rate * fuel_molar_mass; % in g/s
-
-% Result
-fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
-
-
 %% Stoichiometric calculations for diesel
 fuel_name = 'Diesel';
 [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
@@ -212,7 +179,7 @@ Stoich_HVO50 = [a, b, q, k, e, g/2, k]; %Moles of each Component per 100 cycles
 
 %% aROHR
 if exist('O2_percent_load','var')
-    gamma = CalculateGamma(SpS,volume,p_avg,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
+    gamma = CalculateGamma(SpS,volume,p_avg,O2_percent_load,CO2_percent_load,mfr_fuel,AFR_stoich,RPM);
 else
     gamma = 1.32; % constant if no exhuast data exist
 end
@@ -281,7 +248,7 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 MW_fuel = M_HVO;
 % KPIdataFiles = HVO60_raw_dataFiles;
 % Generate KPI table
-KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl);
+KPITable = GenerateKPITable(IDsforKPI, mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl);
 disp(KPITable)
 
 

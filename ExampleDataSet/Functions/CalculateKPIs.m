@@ -1,4 +1,4 @@
-function KPIs = CalculateKPIs(true_mfr_fuel, LHV, P, x, mfr_air, NOx_ppm, MW_Fuel, CO2_percent, O2_percent)
+function KPIs = CalculateKPIs(mfr_fuel, LHV, P, x, mfr_air, NOx_ppm, MW_Fuel, CO2_percent, O2_percent)
     %   true_mfr_fuel      : Fuel mass flow rate (kg/s)
     %   LHV                : Lower heating value of the fuel (J/kg)
     %   P                  : Power output (W)
@@ -38,11 +38,11 @@ function KPIs = CalculateKPIs(true_mfr_fuel, LHV, P, x, mfr_air, NOx_ppm, MW_Fue
 
     % Efficiency
     % Check reference factor (0.16) as needed
-    KPIs.Efficiency = P / (true_mfr_fuel * LHV);
+    KPIs.Efficiency = P / (mfr_fuel * LHV);
 
     % Brake-Specific Fuel Consumption (BSFC)
     % (true_mfr_fuel [g/s]*3600 [s/h])/(P [W]/1000 [kW]) = g/kWh
-    KPIs.BSFC = ((true_mfr_fuel * 3600) / (P / 1000));
+    KPIs.BSFC = ((mfr_fuel * 3600) / (P / 1000));
 
     % Brake-Specific CO2 Emissions
     % bsCO2 = ((x * MW_CO2)/MW_Fuel)*BSFC
@@ -53,7 +53,7 @@ function KPIs = CalculateKPIs(true_mfr_fuel, LHV, P, x, mfr_air, NOx_ppm, MW_Fue
     NOx_mass_fraction = NOx_frac * (MW_NOx / M_exhaust);
 
     % Total exhaust mass flow (approx. sum of air and fuel)
-    mfr_exhaust = mfr_air + true_mfr_fuel;
+    mfr_exhaust = mfr_air + mfr_fuel;
 
     % NOx mass flow (kg/s)
     mfr_NOx = NOx_mass_fraction * mfr_exhaust;
