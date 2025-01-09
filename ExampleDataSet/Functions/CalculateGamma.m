@@ -1,4 +1,4 @@
-function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, true_mfr_fuel, AFR_stoich, RPM)
+function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mfr_fuel, AFR, RPM)
     try
         %% Input validation
         validateInput = @(x, name) assert(~isempty(x) && isnumeric(x) && all(isfinite(x)), ...
@@ -9,8 +9,8 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, tr
         validateInput(pressure, 'pressure');
         validateInput(O2percent, 'O2percent');
         validateInput(CO2percent, 'CO2percent');
-        validateInput(true_mfr_fuel, 'true_mfr_fuel');
-        validateInput(AFR_stoich, 'AFR_stoich');
+        validateInput(mfr_fuel, 'mfr_fuel');
+        validateInput(AFR, 'AFR_stoich');
         validateInput(RPM, 'RPM');
         
         % Validate SpS structure
@@ -25,8 +25,8 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, tr
         assert(all(O2percent >= 0 & O2percent <= 100), 'Error: O2percent must be between 0 and 100');
         assert(all(CO2percent >= 0 & CO2percent <= 100), 'Error: CO2percent must be between 0 and 100');
         assert(all(RPM > 0), 'Error: RPM must be positive');
-        assert(all(AFR_stoich > 0), 'Error: AFR_stoich must be positive');
-        assert(all(true_mfr_fuel > 0), 'Error: true_mfr_fuel must be positive');
+        assert(all(AFR > 0), 'Error: AFR_stoich must be positive');
+        assert(all(mfr_fuel > 0), 'Error: mfr_fuel must be positive');
         
         %% Constants
         Rair = 287;   % Specific gas constant for air [J/(kg·K)]
@@ -54,8 +54,8 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, tr
         assert(cyclesPerSecond > 0, 'Error: Invalid RPM leads to zero or negative cycles per second');
         
         % Convert fuel mass flow from mg/s to kg/cycle
-        massAir = (true_mfr_fuel/1000) / cyclesPerSecond * AFR_stoich;
-        assert(massAir > 0, 'Error: Calculated air mass is not positive');
+        massAir = (mfr_fuel/1000) / cyclesPerSecond * AFR;
+        %assert(massAir > 0, 'Error: Calculated air mass is not positive');
         
         %% Gas constant calculations
         molarMass = [SpS.Mass];
@@ -70,7 +70,7 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, tr
         Rs = Runiv ./ molarMass;
         
         % Mixture gas constants
-        Rin = (Rair * AFR_stoich + Rs(5)) / (AFR_stoich + 1);
+        Rin = (Rair * AFR + Rs(5)) / (AFR + 1);
         Rout = massFractions * Rs';
         
         assert(Rin > 0 && Rout > 0, 'Error: Invalid mixture gas constants calculated');

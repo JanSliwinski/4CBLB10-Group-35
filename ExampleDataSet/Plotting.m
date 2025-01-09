@@ -22,6 +22,7 @@ Cyl.TDCangle = 180; % degrees
 C_p =  1101.6; % [J/g*K]
 gamma = 1.312562;  % 
 
+
 %% Define Crank Angle Resolution and Cycle Parameters
 resolution = 0.2;  % Degrees crank angle resolution
 NdatapointsPerCycle = floor(720 / resolution); % Data points per cycle
@@ -55,6 +56,7 @@ for rowIdx = 1:numGroups
     % Calculate cylinder volume for each crank angle
     volume = CylinderVolume(crank_angle, Cyl); % cubic mm
     
+
     % Compute aROHR and aHR for the current experiment
     aROHR_result = get_aROHR(avgPressure, volume', gamma); 
     aHR_result = get_aHR(aROHR_result); 
@@ -62,6 +64,14 @@ for rowIdx = 1:numGroups
     % Store the results for later use
     aHR_all{rowIdx} = aHR_result; 
     aROHR_all{rowIdx} = aROHR_result; 
+
+    % Verify data lengths
+    if length(avgPressure) ~= length(crank_angle) || ...
+       length(avgMassFlow) ~= length(crank_angle) || ...
+       length(avgCurrent) ~= length(crank_angle)
+        warning('Mismatch in data lengths for group %s. Skipping plotting.', uniqueID);
+        continue;
+    end
     
     % Compute net work over the cycle: ∑ P * dV
     dV = diff(volume);

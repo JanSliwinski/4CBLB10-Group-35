@@ -1,4 +1,5 @@
-function KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel, Cyl)
+function KPITable = GenerateKPITable(IDsforKPI, mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel, Cyl, fuel_used)
+
 %GENERATEKPITABLE Loads multiple datasets, calculates KPIs, and generates a summary table.
 %
 % Inputs:
@@ -36,7 +37,7 @@ function KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_
         data_file_name = IDsforKPI{i,1};
     
         % Extract fuel type (example logic, adjust as needed)
-        fuel_type = 'Diesel'; % Example: HVO50
+        fuel_type = fuel_used; % Example: HVO50
     
         % Load Data
         rowIndex = find(strcmp(T.UniqueID, data_file_name));   % Find the row index for the desired ID
@@ -49,7 +50,7 @@ function KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_
 
         ca = experimentData(1:3600, 1);   % Crank angle in degrees
         p = data_in.AvgPressure * 1e5;     % Pressure in Pa
-        mfr_fuel = true_mfr_fuel;    % Fuel mass flow rate (kg/s)
+        mfr_fuel = mfr_fuel;    % Fuel mass flow rate (kg/s)
 
         % Apply Savitzky-Golay filter to pressure data
         polynomial_order = 3; % Adjust based on noise level
@@ -86,7 +87,7 @@ function KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_
         O2_percent = exhaustDatainT.O2;
 
         % Calculate KPIs
-        KPIs = CalculateKPIs(true_mfr_fuel, LHV, P, x, mean(mfr_air, 'all'), nox_ppm, MW_fuel, CO2_percent, O2_percent);
+        KPIs = CalculateKPIs(mfr_fuel, LHV, P, x, mean(mfr_air, 'all'), nox_ppm, MW_fuel, CO2_percent, O2_percent);
 
         % Populate the i-th row of KPITable
         KPITable(i, :) = {fuel_type, crank_angle, W, KPIs.Efficiency, KPIs.BSFC, KPIs.bsCO2, KPIs.bsNOx};
