@@ -71,7 +71,7 @@ for rowIdx = 1:numGroups
     Q_total = aHR_result(end);
     
     % Calculate efficiency as the ratio of net work to total heat release
-    efficiency_all(rowIdx) = work_total / Q_total
+    efficiency_all(rowIdx) = work_total / Q_total;
     
     % Create a composition key based on metadata fields
     composition_all{rowIdx} = sprintf('C%.2f_Fuel%s', metadata.C, metadata.FuelType);
