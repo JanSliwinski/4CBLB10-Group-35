@@ -1,7 +1,11 @@
-  function [P_cycle, V_cycle] = IdealDieselCycle(Cyl, P1, T1, T4, numPoints, k, rc)
+  function [P_cycle, V_cycle] = IdealDieselCycle(Cyl)
     % Constants
     % k is provided as an input
-    
+    P1 = 101325;                % Initial pressure [Pa]
+    T1 = 298.15;                % Initial temperature [K]
+    rc = 2
+    k = 1.312562
+    numPoints = 100
     % Cylinder dimensions
     Bore = Cyl.Bore;
     Stroke = Cyl.Stroke;
@@ -30,13 +34,13 @@
     
     % Process 3-4: Isentropic expansion (from V3 to V4, where V4 = V1)
     V4 = V1;
-    T4_check = T3 * (V4 / V3)^(k - 1);  % Should match T4
+    %T4_check = T3 * (V4 / V3)^(k - 1);  % Should match T4
     P4 = P3 * (V3 / V4)^k;
     
     % Verify T4
-    if abs(T4 - T4_check) > 1e-3
-        warning('Calculated T4 does not match the given T4.');
-    end
+    %if abs(T4 - T4_check) > 1e-3
+      %  warning('Calculated T4 does not match the given T4.');
+    %end
     
     % Generate arrays for each process
     % Process 1-2: Isentropic compression
