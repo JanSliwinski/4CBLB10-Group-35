@@ -1,6 +1,6 @@
-function [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El)
+function [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(sps_fuel_name, SpS, El)
     % Inputs:
-%   - fuel_name: (string) The name of the fuel species (e.g., 'Methane').
+%   - sps_fuel_name: (string) The name of the fuel species (e.g., 'Methane').
 %   - SpS: (struct array) A database containing species properties, including:
 %       * SpS.Name: (string) Name of the species (e.g., 'O2', 'CO2').
 %       * SpS.Elcomp: (array) Elemental composition of the species [C, H, O, ...].
@@ -40,13 +40,13 @@ function [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fue
 %      computed stoichiometric coefficients.
     
 % Find the fuel in SpS
-    fuel_idx = find(strcmp({SpS.Name}, fuel_name));
+    fuel_idx = find(strcmp({SpS.Name}, sps_fuel_name));
     if isempty(fuel_idx)
-        error('Fuel %s not found in SpS.', fuel_name);
+        error('Fuel %s not found in SpS.', sps_fuel_name);
     end
     fuel_species = SpS(fuel_idx);
 
-    % Extract elemental composition
+    % Extract elemeal composition
     elcomp = fuel_species.Elcomp;  % Array of elemental composition
 
     % Extract element names and create a mapping
@@ -111,7 +111,7 @@ function [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fue
     stoich_coeffs.N2_prod = N2_prod_coeff;
     % Reaction equation string
     reaction_eq = sprintf('%g %s + %g O2 + %g N2 -> %g CO2 + %g H2O + %g N2', ...
-        fuel_coeff, fuel_name, O2_coeff, N2_coeff, CO2_coeff, H2O_coeff, N2_prod_coeff);
+        fuel_coeff, sps_fuel_name, O2_coeff, N2_coeff, CO2_coeff, H2O_coeff, N2_prod_coeff);
 
     % Molecular weights
     MW_O2 = 32;  % g/mol

@@ -16,10 +16,10 @@ clear; clc; close all;
 
 %% Define Paths
 % Specify the folder containing the renamed experiment data TXT files
-dataFolder = 'AdjustedData'; % <-- Replace with your actual folder path
+dataFolder = 'ExampleDataSet/AdjustedData'; % <-- Replace with your actual folder path
 
 % Specify the path to the additional data CSV file
-additionalCSVPath = 'CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
+additionalCSVPath = 'ExampleDataSet/CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
 
 % Verify that the data folder exists
 if ~isfolder(dataFolder)
@@ -38,13 +38,16 @@ n = 21;    % Window size (must be odd)
 s = 0;    % Derivative order (0 for smoothing)
 
 %% Load Additional Data
-% Read the additional data CSV into a table
 try
-    additionalDataTable = readtable(additionalCSVPath, 'Delimiter', ';', 'ReadVariableNames', true);
+    additionalDataTable = readtable(additionalCSVPath,'Delimiter', ';','VariableNamingRule', 'preserve');
     fprintf('Successfully loaded additional data CSV with %d rows.\n', height(additionalDataTable));
 catch ME
     error('Failed to read additional data CSV: %s', ME.message);
 end
+
+% Manually assign the required column names
+columnNames = {'L', 'I', 'C', 'FuelType', 'CO', 'HC', 'NOx', 'CO2', 'O2', 'Lambda'};
+additionalDataTable.Properties.VariableNames = columnNames;
 
 % Validate that the required columns exist, now including FuelType
 requiredColumns = {'L', 'I', 'C', 'FuelType', 'CO', 'HC', 'NOx', 'CO2', 'O2', 'Lambda'};
