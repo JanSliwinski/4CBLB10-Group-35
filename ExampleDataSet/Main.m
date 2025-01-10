@@ -148,6 +148,11 @@ grid on;
 % p_avg = mean(p_filt, 2);             % Average pressure across all cycles for every CA
 % p_filtered_avg = mean(p, 2);
 
+
+
+
+
+
 %% Calculate Work
 W = trapz(volume, p_avg*1e5); % Calculate the area under the averaged p-V curve
 disp(['Calculated work: ', num2str(W), ' J']);
@@ -303,3 +308,28 @@ grid on;
 hold off;
 
  
+
+
+%% PV plot
+[P_cycle, V_cycle] = IdealDieselCycle(Cyl) %Call ideal cycle function
+
+figure; %Plot Ideal cycle
+hold on;
+plot(V_cycle, P_cycle / bara, 'DisplayName', 'ideal');
+xlabel('Volume');
+ylabel('Pressure [bar]');
+title(['PV plot (Cycle ', num2str(iselect), ')']);
+legend('show');
+grid on;
+hold off;
+
+
+figure; %Plot experimental cycle
+hold on;
+plot(volume(:, 1), p_filt(:, 1) / bara, 'DisplayName', 'exp filtered data');
+xlabel('Volume');
+ylabel('Pressure [bar]');
+title(['PV plot (Cycle ', num2str(iselect), ')']);
+legend('show');
+grid on;
+hold off;
