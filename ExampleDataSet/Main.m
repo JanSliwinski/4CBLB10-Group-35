@@ -1,11 +1,11 @@
 warning off
 %% Initialization
-if ~exist("T","var")
+if ~exist("T","var")    % make sure that table T is defined
     load('T.mat','T')
 end
-clearvars -except T; close all; clc
-addpath("Functions", "Nasa");  % Add necessary paths
-% figure('Visible', 'on');
+clearvars -except T; close all; clc % clean out the workspace and the command window
+addpath("Functions", "Nasa");savepath  % Add necessary paths for Nasa tables
+
 %% Units and Constants
 mm = 1e-3;
 dm = 0.1;
@@ -30,27 +30,66 @@ x_diesel = 12;      %carbon atoms in diesel
 x_GTL = 14;         %carbon atoms in GTL
 
 %% Load and Reshape data (also exhaust data)
-ID = 'L50I14C0FuelHVO'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
-%run fucntion to load in all relevant data
-[dataIn, ExhaustData, Ca, p_filt, p_avg, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
-IDsforKPI = table({'L50I14C0FuelHVO', 'L50I15C0FuelHVO'}');
 
-%% Define Fuel used and applicable LHV - CHANGE EVERY LINE IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
-fuel_used = 'Diesel';
-perc_blend = 0; %fraction of the blended in fuel (HVO or GTL)
+ID = 'L50I20C100FuelGTL'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
+%run fucntion to load in all relevant data
+[dataIn, ExhaustData, Ca, p_avg, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
+IDsforKPI = table({'L50I14C100FuelGTL', 'L50I16C100FuelGTL', 'L50I18C100FuelGTL', 'L50I20C100FuelGTL'}');
+
+%% Define Fuel used and applicable LHV - CHANGE THE LINES IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
+fuel_used = 'GTL100';
+perc_blend = 1; %fraction of the blended in fuel (HVO or GTL) should be set to 0 if you are using diesel
 x_blend = x_diesel;  %carbon atoms in the given fuel, can be: x_diesel, x_HVO or x_GTL
-LHV_blend = LHV_diesel;
+LHV_blend = LHV_GTL; %LHV of the given fuel, can be: LHV_diesel, LHV_HVO or LHV_GTL
+
 
 %% Calculate LHV and x for the fuel used
-perc_diesel = 1-perc_blend;
-LHV = LHV_blend * perc_blend + LHV_diesel * perc_diesel;
-x = x_blend * perc_blend + x_diesel * perc_diesel;
+perc_diesel = 1-perc_blend;     % percentage of diesel in the fuel used 
+LHV = LHV_blend * perc_blend + LHV_diesel * perc_diesel;    % calculate the LHV for the fuel
+x = x_blend * perc_blend + x_diesel * perc_diesel;  % calculate the number of carbon atoms in the fuel
+MW_fuel = M_diesel;     % Molar mass of fuel - keep this on M_diesel
 
 %% Load NASA Data (if needed)
 global Runiv
-Runiv = 8.314; 
+Runiv = 8.314;
+[SpS, El] = myload('Nasa/NasaThermalDatabase.mat', {'N2', 'O2', 'CO2', 'H2O', 'Diesel'}); 
 
-[SpS, El] = myload('Nasa/NasaThermalDatabase.mat', {'N2', 'O2', 'CO2', 'H2O', 'Diesel'});
+%% Compute massflow
+sps_fuel_name = 'Diesel';   % fuel name for Sps calculations (keep it on diesel!)
+if mean(mfr_fuel) > 0.1 || mean(mfr_fuel) < 0.3     % check if measured mfr fuel is realistic
+    mfr_fuel = mean(mfr_fuel);  % set mfr fuel to the mean of all measured data
+    [~,~,AFR_stoich] = StoichiometricCombustion(sps_fuel_name, SpS, El); % perform stoichiometric calculation
+    mfr_air = CalculateMassFlowAir(O2_percent_load,mfr_fuel,AFR_stoich); % calculate mfr of air
+    AFR = mfr_air / mfr_fuel;   % calculate AFR
+else
+    % Calculate the mass flow rate of fuel using Bart's method.
+    % This method is used if the measured mass flow rate of fuel is deemed unrealistic.
+
+    % Constants
+    M_C = 12;           % Molar mass of Carbon (g/mol)
+    M_H = 1;            % Molar mass of Hydrogen (g/mol)
+    M_CO2 = 44;         % Molar mass of CO2 (g/mol)
+    mass_CH_ratio = 2;  % Typical Carbon-to-Hydrogen mass ratio for GTL (Gas-to-Liquid fuel)
+    CO2_mass_flow_rate = 0.5; % Assumed mass flow rate of CO2 (g/s)
+
+    % Calculate the molar Carbon-to-Hydrogen ratio
+    molar_CH_ratio = mass_CH_ratio * (M_H / M_C); % Convert mass CH ratio to molar CH ratio
+
+    % Determine the Hydrogen-to-Carbon ratio (y) for the given fuel
+    y = molar_CH_ratio * x; % x represents the Carbon content, given earlier in the code
+
+    % Calculate the molar mass of the fuel (CxHy) in g/mol
+    fuel_molar_mass = x * M_C + y * M_H;
+
+    % Convert the mass flow rate of CO2 to a molar flow rate (mol/s)
+    CO2_molar_flow_rate = CO2_mass_flow_rate / M_CO2;
+
+    % Determine the molar flow rate of the fuel (CxHy)
+    fuel_molar_flow_rate = CO2_molar_flow_rate / x;
+
+    % Calculate the mass flow rate of the fuel (g/s)
+    mfr_fuel = mean(fuel_molar_flow_rate * fuel_molar_mass);
+end
 
 %% Volume
 % Engine Geometry Parameters
@@ -59,14 +98,10 @@ Cyl.Stroke = 85 * mm;              % Cylinder stroke
 Cyl.CompressionRatio = 21.5;       % Compression ratio
 Cyl.ConRod = 136.5 * mm;           % Connecting rod length
 Cyl.TDCangle = 180;                % Top Dead Center angle
+
 % Calculate cylinder volume using CylinderVolume function
 volume = CylinderVolume(Ca,Cyl);
 disp('Cylider volume calculated / cycle');
-
-%% Stoichiometric calculations
-fuel_name = 'Diesel';
-[stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
-stoich_coeffs.fuel
 
 %% Detect Start and End of Injection from Sensor Current
 
@@ -96,7 +131,6 @@ fprintf('Injection ends at %.2f° CA\n', injection_end_ca);
 
 %% Plot Average Sensor Current with Injection Markers
 figure;
-
 % Plot the average sensor current
 plot(Ca(:, 1), S_current_avg, 'LineWidth', 1.5);
 xlabel('Crank Angle (°)');
@@ -118,11 +152,9 @@ text(injection_end_ca, S_current_avg(injection_end_idx), sprintf('End: %.2f°', 
 
 hold off;
 
-true_mfr_fuel = CalculateMassFlowFuel(mfr_fuel, S_current, Ca, RPM, threshold);
-
 %% Plot Pressure vs. Crank Angle for All Cycles
 figure;
-plot(Ca, p_filt / bara, 'LineWidth', 1);
+plot(Ca, p_avg / bara, 'LineWidth', 1);
 xlabel('Crank Angle (°)');
 ylabel('Pressure (bar)');
 xlim([-360, 360]);
@@ -133,7 +165,7 @@ grid on;
 % Highlight a specific cycle
 iselect = 10;
 hold on;
-plot(Ca(iselect), p_filt(iselect) / bara, 'r', 'LineWidth', 2);
+plot(Ca(iselect), p_avg(iselect) / bara, 'r', 'LineWidth', 2);
 
 % Plot valve events
 % YLIM = ylim;
@@ -143,10 +175,9 @@ plot(Ca(iselect), p_filt(iselect) / bara, 'r', 'LineWidth', 2);
 set(gca, 'XTick', -360:60:360);
 grid on;
 
-% %% Calculate Average Volume and Pressure
+%% Calculate Average Volume and Pressure
 % V_avg = mean(volume, 2);         % Average volume across all cycles for every CA
-% p_avg = mean(p_filt, 2);             % Average pressure across all cycles for every CA
-% p_filtered_avg = mean(p, 2);
+% p_avg_num = mean(p_avg, 2);             % Average pressure across all cycles for every CA
 
 
 
@@ -156,38 +187,6 @@ grid on;
 %% Calculate Work
 W = trapz(volume, p_avg*1e5); % Calculate the area under the averaged p-V curve
 disp(['Calculated work: ', num2str(W), ' J']);
-
-%% Calculate mass flow of fuel
-% Constants
-M_C = 12; % Molar mass of Carbon (g/mol)
-M_H = 1; % Molar mass of Hydrogen (g/mol)
-M_CO2 = 44; % Molar mass of CO2 (g/mol)
-mass_CH_ratio = 5.49; % Typical C/H mass ratio for diesel
-
-% Inputs: Known CO2 mass flow rate
-CO2_mass_flow_rate = 0.5; % IDK what this value is but Barrt Sommers says we should have it (we have the percentage of it but IDK how to get mfr from that)
-
-% Convert mass CH ratio to molar CH ratio
-molar_CH_ratio = mass_CH_ratio * (M_H / M_C);
-
-% Determine y for the given fuel (x is given above) 
-y = molar_CH_ratio * x;
-
-% Calculate molar mass of diesel (CxHy)
-fuel_molar_mass = x * M_C + y * M_H; % in g/mol
-
-% Convert CO2 mass flow rate to molar flow rate
-CO2_molar_flow_rate = CO2_mass_flow_rate / M_CO2; % in mol/s
-
-% Determine the molar flow rate of diesel
-fuel_molar_flow_rate = CO2_molar_flow_rate / x;
-
-% Convert diesel molar flow rate to mass flow rate
-fuel_mass_flow_rate = fuel_molar_flow_rate * fuel_molar_mass; % in g/s
-
-% Result
-fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
-
 
 %% Stoichiometric calculations for diesel
 fuel_name = 'Diesel';
@@ -214,15 +213,9 @@ Stoich_HVO100 = [moles_HVO, moles_O2, moles_N2, moles_CO2, moles_H2O, moles_N2];
  k = q * (79 / 21);
 Stoich_HVO50 = [a, b, q, k, e, g/2, k]; %Moles of each Component per 100 cycles
 
-
 %% aROHR
-
-%p_filt = sgolayfilt(p,2,101);
-
-%p_filtRough = sgolayfilt(p_filt,2,101);
-
 if exist('O2_percent_load','var')
-    gamma = CalculateGamma(SpS,volume,p_avg,O2_percent_load,CO2_percent_load,true_mfr_fuel,AFR_stoich,RPM);
+    gamma = CalculateGamma(SpS,volume,p_avg,O2_percent_load,CO2_percent_load,mfr_fuel,AFR_stoich,RPM);
 else
     gamma = 1.32; % constant if no exhuast data exist
 end
@@ -254,51 +247,16 @@ plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
 xlim([-5,50]);
 legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
 
-%% Calculate Heat of combustion and Temperature at exhaust - LHV way
-% [T_exh, Q_combustion_LHV, m_combusted] = Calc_Q_LHV(C_p, mfr_fuel, mfr_air, RPM, W, LHV, T_int);
-
-%% Calculate Heat of combustion and Temperature at exhaust - aROHR way
-%[Q_combustion_aROHR] = Calc_Q_aROHR(p_filt, V_all, Ca, ValveEvents, gamma);
-% disp(['Q combustion aROHR way: ', num2str(Q_combustion_aROHR), ' J']);
-
-%% Thermal efficiency of the engine
-% efficiency_LHV = (W / Q_combustion_LHV) *100; % efficiency for each cycle
-% disp(['Calculated average thermal efficiency(LHV): ', num2str(efficiency_LHV), ' %']);
-% 
-% efficiency_LHV = (W / Q_combustion_aROHR) *100; % efficiency for each cycle
-% disp(['Calculated average thermal efficiency(aROHR): ', num2str(efficiency_LHV), ' %']);
-
-%% Calculate thermodynamic properties for each cycle - THIS STILL NEEDS TO BE IMPLEMENTED PROPERLY - NEED TO CALCULAT T_EXHAUST FOR IT SOMEHOW 
-intake_species = [2, 3];           % Example species (O2 and N2)
-exhaust_species = [4, 5, 3];       % Example species (CO2, H2O, and N2)
-Y_int = [0.21, 0.79];              % Mole fractions for intake
-Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
-
-% % Call the function
-%[Delta_H_all, Delta_U_all, Delta_S_all] = ThermoProperties(T_int, T_exh, SpS, Ncycles, Ca, intake_species, exhaust_species, Y_int, Y_exh);
- 
-% % Calculate averages
-% Delta_H_avg = mean(Delta_H_all, 2);
-% Delta_U_avg = mean(Delta_U_all, 2);
-% Delta_S_avg = mean(Delta_S_all, 2);
-
-
 %% Key performance indicators
-% KPI data
-% Format: data file, fuel, crank angle
 
-% The selected fuel
-MW_fuel = M_HVO;
-% KPIdataFiles = HVO60_raw_dataFiles;
 % Generate KPI table
-KPITable = GenerateKPITable(IDsforKPI, true_mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl);
+KPITable = GenerateKPITable(IDsforKPI, mfr_fuel, T, LHV, RPM, AFR_stoich, x, MW_fuel,Cyl, fuel_used);
 disp(KPITable)
-
 
 %% Compare Raw and Filtered Pressure Data for a Single Cycle
 figure;
 hold on;
-plot(Ca(:, 1), p_filt(:, 1) / bara, 'DisplayName', 'Raw Data');
+plot(Ca(:, 1), p_avg(:, 1) / bara, 'DisplayName', 'Raw Data');
 plot(Ca(:, 1), p_avg(:, 1) / bara, 'DisplayName', 'Filtered Data');
 xlabel('Crank Angle (°)');
 ylabel('Pressure [bar]');
