@@ -168,7 +168,7 @@ Y_exh = [0.12, 0.18, 0.70];        % Mole fractions for exhaust
 M_C = 12; % Molar mass of Carbon (g/mol)
 M_H = 1; % Molar mass of Hydrogen (g/mol)
 M_CO2 = 44; % Molar mass of CO2 (g/mol)
-mass_CH_ratio = 5.49; % Typical C/H mass ratio for diesel
+mass_CH_ratio = 2; % Typical C/H mass ratio for GTL
 
 % Inputs: Known CO2 mass flow rate
 CO2_mass_flow_rate = 0.5; % IDK what this value is but Barrt Sommers says we should have it (we have the percentage of it but IDK how to get mfr from that)

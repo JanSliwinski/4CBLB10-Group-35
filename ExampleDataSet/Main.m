@@ -54,6 +54,35 @@ Runiv = 8.314;
 
 [SpS, El] = myload('Nasa/NasaThermalDatabase.mat', {'N2', 'O2', 'CO2', 'H2O', 'Diesel'});
 
+%% Compute massflow
+if mean(mfr_fuel) > 0.1 || mean(mfr_fuel) < 0.3
+    mfr_fuel = mean(mfr_fuel);
+    [~,~,AFR_stoich] = StoichiometricCombustion(fuel_used, SpS, El);
+    mfr_air = CalculateMassFlowAir(O2_percent_load,mfr_fuel,AFR_stoich);
+    AFR = mfr_air / mfr_fuel;
+else
+    % Calculate mass flow of fuel; Bart's method
+    % Constants
+    M_C = 12; % Molar mass of Carbon (g/mol)
+    M_H = 1; % Molar mass of Hydrogen (g/mol)
+    M_CO2 = 44; % Molar mass of CO2 (g/mol)
+    mass_CH_ratio = 2; % Typical C/H mass ratio for GTL
+    % Inputs: Known CO2 mass flow rate
+    CO2_mass_flow_rate = 0.5; % IDK what this value is but Barrt Sommers says we should have it (we have the percentage of it but IDK how to get mfr from that)
+    % Convert mass CH ratio to molar CH ratio
+    molar_CH_ratio = mass_CH_ratio * (M_H / M_C);
+    % Determine y for the given fuel (x is given above) 
+    y = molar_CH_ratio * x;
+    % Calculate molar mass of diesel (CxHy)
+    fuel_molar_mass = x * M_C + y * M_H; % in g/mol
+    % Convert CO2 mass flow rate to molar flow rate
+    CO2_molar_flow_rate = CO2_mass_flow_rate / M_CO2; % in mol/s
+    % Determine the molar flow rate of diesel
+    fuel_molar_flow_rate = CO2_molar_flow_rate / x;
+    % Convert diesel molar flow rate to mass flow rate
+    mfr_fuel = mean(fuel_molar_flow_rate * fuel_molar_mass); % in g/s
+end
+
 %% Volume
 % Engine Geometry Parameters
 Cyl.Bore = 104 * mm;               % Cylinder bore
@@ -64,12 +93,6 @@ Cyl.TDCangle = 180;                % Top Dead Center angle
 % Calculate cylinder volume using CylinderVolume function
 volume = CylinderVolume(Ca,Cyl);
 disp('Cylider volume calculated / cycle');
-
-%% Stoichiometric calculations
-fuel_name = 'Diesel';
-[stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
-mfr_air = CalculateMassFlowAir(O2_percent_load,mfr_fuel,AFR_stoich);
-AFR = mfr_air / mfr_fuel;
 
 %% Detect Start and End of Injection from Sensor Current
 
