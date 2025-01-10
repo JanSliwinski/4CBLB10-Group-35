@@ -265,15 +265,15 @@ legend('show');
 grid on;
 hold off;
 
- 
+ %% PV plot
 
-
-%% PV plot
-[P_cycle, V_cycle] = IdealDieselCycle(Cyl) %Call ideal cycle function
-
+p_avg = (p_avg * 10e4);
+[P_cycle, V_cycle] = IdealDieselCycle(Cyl); %Call ideal cycle function
+hold on 
 figure; %Plot Ideal cycle
 hold on;
 plot(V_cycle, P_cycle / bara, 'DisplayName', 'ideal');
+plot(volume(:, 1), p_avg(:, 1) / bara, 'DisplayName', 'exp filtered data');
 xlabel('Volume');
 ylabel('Pressure [bar]');
 title(['PV plot (Cycle ', num2str(iselect), ')']);
@@ -282,12 +282,17 @@ grid on;
 hold off;
 
 
-figure; %Plot experimental cycle
+hold on 
+figure; %Plot Ideal cycle
 hold on;
-plot(volume(:, 1), p_filt(:, 1) / bara, 'DisplayName', 'exp filtered data');
+plot(V_cycle, P_cycle / bara, 'DisplayName', 'ideal');
+plot(volume(:, 1), p_avg(:, 1) / bara, 'DisplayName', 'exp filtered data');
+set(gca, 'XScale', 'log', 'YScale', 'log');
 xlabel('Volume');
 ylabel('Pressure [bar]');
 title(['PV plot (Cycle ', num2str(iselect), ')']);
 legend('show');
 grid on;
 hold off;
+
+
