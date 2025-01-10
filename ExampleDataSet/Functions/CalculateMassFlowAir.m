@@ -22,4 +22,5 @@ function mfr_air = CalculateMassFlowAir(O2_percent, mfr_fuel, AFR_stoich)
     % Calculate Mass flow rate of air (element-wise multiplication)
     % mfr_air = lambda * AFR_stoich * mfr_fuel
     mfr_air = equivalent_ratio .* AFR_stoich .* mfr_fuel;
+    mfr_air = mean(mfr_air);
 end
