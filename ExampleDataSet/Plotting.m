@@ -56,7 +56,7 @@ for rowIdx = 1:numGroups
     % Calculate cylinder volume for each crank angle
     volume = CylinderVolume(crank_angle, Cyl); % cubic mm
     
-
+    T.AdditionalData{rowIdx}
     % Compute aROHR and aHR for the current experiment
     aROHR_result = get_aROHR(avgPressure, volume', gamma); 
     aHR_result = get_aHR(aROHR_result); 

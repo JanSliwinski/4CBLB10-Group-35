@@ -39,12 +39,11 @@ s = 0;    % Derivative order (0 for smoothing)
 
 %% Load Additional Data
 try
-    additionalDataTable = readtable(additionalCSVPath,'Delimiter', ';','VariableNamingRule', 'preserve');
+    additionalDataTable = readtable(additionalCSVPath,'Delimiter', ';','VariableNamingRule', 'preserve')
     fprintf('Successfully loaded additional data CSV with %d rows.\n', height(additionalDataTable));
 catch ME
     error('Failed to read additional data CSV: %s', ME.message);
 end
-
 % Manually assign the required column names
 columnNames = {'L', 'I', 'C', 'FuelType', 'CO', 'HC', 'NOx', 'CO2', 'O2', 'Lambda'};
 additionalDataTable.Properties.VariableNames = columnNames;
