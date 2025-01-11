@@ -16,10 +16,10 @@ clear; clc; close all;
 
 %% Define Paths
 % Specify the folder containing the renamed experiment data TXT files
-dataFolder = 'ExampleDataSet/AdjustedData'; % <-- Replace with your actual folder path
+dataFolder = './AdjustedData'; % <-- Replace with your actual folder path
 
 % Specify the path to the additional data CSV file
-additionalCSVPath = 'ExampleDataSet/CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
+additionalCSVPath = './CompiledEmissions.csv'; % <-- Replace with your actual CSV file path
 
 % Verify that the data folder exists
 if ~isfolder(dataFolder)
