@@ -50,12 +50,10 @@ volume = CylinderVolume(Ca,Cyl)';
 disp('Cylider volume calculated / cycle');
 
 %% Stoichiometric calculations
-[stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion('Diesel', SpS, El);
+[stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(SpS, El);
 stoich_coeffs.fuel
 
 %% Loop Through All Groups in Table T
-
-
 
 numGroups = height(T);
 fprintf('Starting to plot data for %d groups.\n', numGroups);

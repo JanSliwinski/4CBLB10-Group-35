@@ -50,28 +50,14 @@ function KPITable = GenerateKPITable(IDsforKPI, mfr_fuel, T, LHV, RPM, AFR_stoic
 
         ca = experimentData(1:3600, 1);   % Crank angle in degrees
         p = data_in.AvgPressure * 1e5;     % Pressure in Pa
-        mfr_fuel = mfr_fuel;    % Fuel mass flow rate (kg/s)
-
-        % Apply Savitzky-Golay filter to pressure data
-        polynomial_order = 3; % Adjust based on noise level
-        frame_length = 21;    % Must be odd
         
-        % Initialize the filtered pressure matrix
-        p_filtered = zeros(size(p));
-        
-         % Apply the filter for one cycle
-        p_filtered = SGFilter(p, polynomial_order, frame_length, 0);
-        
-        % Replace raw pressure data with filtered data for further calculations
-        p = p_filtered;
-
         % Calculate Work and Power
         v_all = CylinderVolume(ca, Cyl);
 
         v_avg = mean(v_all, 2);
         p_avg = mean(p, 2);
         W = trapz(v_avg, p_avg);             % Work done (J)
-        P = W * (RPM / (2 * 60));            % Power output (W)
+        Power = W * (RPM / (2 * 60));            % Power output (W)
 
         exhaustDatainT = T.AdditionalData{rowIndex};    % Extract the Exhaust data for the blend
 
@@ -87,7 +73,7 @@ function KPITable = GenerateKPITable(IDsforKPI, mfr_fuel, T, LHV, RPM, AFR_stoic
         O2_percent = exhaustDatainT.O2;
 
         % Calculate KPIs
-        KPIs = CalculateKPIs(mfr_fuel, LHV, P, x, mean(mfr_air, 'all'), nox_ppm, MW_fuel, CO2_percent, O2_percent);
+        KPIs = CalculateKPIs(mfr_fuel, LHV, Power, x, mean(mfr_air, 'all'), nox_ppm, MW_fuel, CO2_percent, O2_percent);
 
         % Populate the i-th row of KPITable
         KPITable(i, :) = {fuel_type, crank_angle, W, KPIs.Efficiency, KPIs.BSFC, KPIs.bsCO2, KPIs.bsNOx};

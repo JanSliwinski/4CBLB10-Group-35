@@ -7,47 +7,56 @@ clearvars -except T; close all; clc % clean out the workspace and the command wi
 addpath("Functions", "Nasa");savepath  % Add necessary paths for Nasa tables
 
 %% Units and Constants
-mm = 1e-3;
-dm = 0.1;
-bara = 1e5;
-MJ = 1e6;
-kWhr = 1000 * 3600;
-volperc = 0.01;  % Emissions are in volume percentages
-ppm = 1e-6;      % Some are in ppm (also a volume fraction)
-g = 1e-3;
-s = 1;
-RPM = 1500;     % constant RPM of experiments [rotation/min]
-T_int = 295.15; % assumed temperature at the intake [K]
-M_diesel = 167; % Molar mass (g/mol)
-M_HVO = 226; % Molar mass (g/mol)
-Density_HVO = 0.78;
-Density_Diesel = 0.85;
-LHV_diesel = 43e3;  %Lower heating value given in the project guide for Diesel B7 J/g
-LHV_HVO = 44.29e3;  %Lower heating value given in the project guide for HVO J/g
-LHV_GTL = 44e3;     %Lower heating value given in the project guide for GTL B7 J/g
-x_HVO = 16;         %carbon atoms in HVO
-x_diesel = 12;      %carbon atoms in diesel 
-x_GTL = 14;         %carbon atoms in GTL
+% Conversion factors
+mm = 1e-3;            % Millimeter to meter conversion
+dm = 0.1;             % Decimeter to meter conversion
+bara = 1e5;           % Bar to Pascals (pressure) conversion
+MJ = 1e6;             % MegaJoule to Joules conversion
+kWhr = 1000 * 3600;   % Kilowatt-hour to Joules conversion
+volperc = 0.01;       % Emissions in volume percentages
+ppm = 1e-6;           % Concentration in parts per million (ppm, volume fraction)
+
+% Basic physical constants
+g = 1e-3;             % Gram to kilogram conversion
+s = 1;                % Time in seconds (s)
+
+% Experimental conditions
+RPM = 1500;           % Constant RPM for experiments [rotation/min]
+T_int = 295.15;       % Assumed intake temperature [K]
+
+% Molecular properties of fuels
+M_diesel = 167;       % Molar mass of diesel (g/mol)
+M_HVO = 226;          % Molar mass of HVO (g/mol)
+M_GTL = 170;          % Molar mass of GTL (g/mol)
+
+% Fuel densities
+Density_HVO = 0.78;     % Density of HVO (g/cm³)
+Density_Diesel = 0.85;  % Density of Diesel (g/cm³)
+Density_GTL = 0.79;     % Density of GTL (g/cm³)
+
+% Lower heating values (LHV) of fuels
+LHV_diesel = 43e3;    % LHV of Diesel B7 (J/g)
+LHV_HVO = 44.29e3;    % LHV of HVO (J/g)
+LHV_GTL = 44e3;       % LHV of GTL B7 (J/g)
+
+% Carbon atom count in fuel molecules
+x_HVO = 16;           % Carbon atoms in HVO
+x_diesel = 12;        % Carbon atoms in Diesel
+x_GTL = 14;           % Carbon atoms in GTL
+
 
 %% Load and Reshape data (also exhaust data)
 
-ID = 'L50I20C100FuelGTL'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
+ID = 'L50I17C50FuelHVO'; %DEFINE ID OF THE EXPERIMENT DATA YOU WANT TO LOAD IN!
 %run fucntion to load in all relevant data
-[dataIn, ExhaustData, Ca, p_avg, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load] = loadingfromT(T, ID, bara);
+[dataIn, ExhaustData, Ca, p_avg, S_current, mfr_fuel, CO_percent_load, HC_ppm_load, NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load,  x_blend, LHV_blend, perc_blend, fuel_used, M_blend] = loadingfromT(T, ID, bara, x_GTL, x_diesel, x_HVO, LHV_GTL, LHV_HVO, LHV_diesel, M_GTL, M_HVO, M_diesel);
 IDsforKPI = table({'L50I14C100FuelGTL', 'L50I16C100FuelGTL', 'L50I18C100FuelGTL', 'L50I20C100FuelGTL'}');
-
-%% Define Fuel used and applicable LHV - CHANGE THE LINES IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!
-fuel_used = 'GTL100';
-perc_blend = 1; %fraction of the blended in fuel (HVO or GTL) should be set to 0 if you are using diesel
-x_blend = x_diesel;  %carbon atoms in the given fuel, can be: x_diesel, x_HVO or x_GTL
-LHV_blend = LHV_GTL; %LHV of the given fuel, can be: LHV_diesel, LHV_HVO or LHV_GTL
-
 
 %% Calculate LHV and x for the fuel used
 perc_diesel = 1-perc_blend;     % percentage of diesel in the fuel used 
 LHV = LHV_blend * perc_blend + LHV_diesel * perc_diesel;    % calculate the LHV for the fuel
 x = x_blend * perc_blend + x_diesel * perc_diesel;  % calculate the number of carbon atoms in the fuel
-MW_fuel = M_diesel;     % Molar mass of fuel - keep this on M_diesel
+MW_fuel = M_blend * perc_blend + perc_diesel * M_diesel;     % Molar mass of fuel
 
 %% Load NASA Data (if needed)
 global Runiv
@@ -58,7 +67,7 @@ Runiv = 8.314;
 sps_fuel_name = 'Diesel';   % fuel name for Sps calculations (keep it on diesel!)
 if mean(mfr_fuel) > 0.1 || mean(mfr_fuel) < 0.3     % check if measured mfr fuel is realistic
     mfr_fuel = mean(mfr_fuel);  % set mfr fuel to the mean of all measured data
-    [~,~,AFR_stoich] = StoichiometricCombustion(sps_fuel_name, SpS, El); % perform stoichiometric calculation
+    [~,~,AFR_stoich] = StoichiometricCombustion(SpS, El); % perform stoichiometric calculation
     mfr_air = CalculateMassFlowAir(O2_percent_load,mfr_fuel,AFR_stoich); % calculate mfr of air
     AFR = mfr_air / mfr_fuel;   % calculate AFR
 else
@@ -175,22 +184,12 @@ plot(Ca(iselect), p_avg(iselect) / bara, 'r', 'LineWidth', 2);
 set(gca, 'XTick', -360:60:360);
 grid on;
 
-%% Calculate Average Volume and Pressure
-% V_avg = mean(volume, 2);         % Average volume across all cycles for every CA
-% p_avg_num = mean(p_avg, 2);             % Average pressure across all cycles for every CA
-
-
-
-
-
-
 %% Calculate Work
 W = trapz(volume, p_avg*1e5); % Calculate the area under the averaged p-V curve
 disp(['Calculated work: ', num2str(W), ' J']);
 
 %% Stoichiometric calculations for diesel
-fuel_name = 'Diesel';
-[stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(fuel_name, SpS, El);
+[stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(SpS, El);
 stoich_coeffs.fuel
 
 %% Stoichiometric Calculations for HVO
@@ -231,21 +230,21 @@ disp("aROHR and aHR computed successfully!")
  subplot(1,2,1)
  plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
  xlim([-10,30]);
- legend("aROHR","Location","southeast");title(["Apparent Rate of Heat", "Release for " + ID]);
+ legend("aROHR","Location","southeast");title(["Apparent Rate of Heat", "Release for " + fuel_used]);
  subplot(1,2,2)
  plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
  xlim([-10,30]);
- legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
+ legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + fuel_used]);
 
 figure;
 subplot(1,2,1)
 plot(Ca,aROHR);xlabel("Crank Angle [deg]");ylabel("Apparent Rate of Heat Realease [J/deg]");
 xlim([-5,50]);
-legend("aROHR","Location","southeast");title(["Apparent Rate of Heat", "Release for " + ID]);
+legend("aROHR","Location","southeast");title(["Apparent Rate of Heat", "Release for " + fuel_used]);
 subplot(1,2,2)
 plot(Ca,aHR);xlabel("Crank Angle [deg]");ylabel("Apparent Heat Realease [J]");
 xlim([-5,50]);
-legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + ID]);
+legend("aHR","Location","southeast");title(["Apparent Heat Release", "for " + fuel_used]);
 
 %% Key performance indicators
 
@@ -266,7 +265,6 @@ grid on;
 hold off;
 
  %% PV plot
-
 p_avg = (p_avg * 10e4);
 [P_cycle, V_cycle] = IdealDieselCycle(Cyl); %Call ideal cycle function
 hold on 

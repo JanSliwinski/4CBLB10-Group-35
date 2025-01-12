@@ -20,8 +20,7 @@ Cyl.TDCangle = 180; % degrees
 
 %% Constants 
 C_p =  1101.6; % [J/g*K]
-gamma = 1.312562;  % 
-
+gamma = 1.312562;  % gamma defined as a constant
 
 %% Define Crank Angle Resolution and Cycle Parameters
 resolution = 0.2;  % Degrees crank angle resolution
@@ -88,7 +87,7 @@ for rowIdx = 1:numGroups
 end
 
 %% Group by Composition and Select Most Efficient Experiment per Composition
-unique_compositions = unique(composition_all)
+unique_compositions = unique(composition_all);
 most_efficient_idx = zeros(length(unique_compositions),1);
 
 for k = 1:length(unique_compositions)
@@ -98,7 +97,7 @@ for k = 1:length(unique_compositions)
     most_efficient_idx(k) = indices(maxLocalIdx);
 end
 
-selected_indices = most_efficient_idx
+selected_indices = most_efficient_idx;
 colors = lines(length(selected_indices));
 
 %% Plot aHR for Most Efficient Experiments

@@ -1,6 +1,5 @@
-function [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(sps_fuel_name, SpS, El)
+function [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(SpS, El)
     % Inputs:
-%   - sps_fuel_name: (string) The name of the fuel species (e.g., 'Methane').
 %   - SpS: (struct array) A database containing species properties, including:
 %       * SpS.Name: (string) Name of the species (e.g., 'O2', 'CO2').
 %       * SpS.Elcomp: (array) Elemental composition of the species [C, H, O, ...].
@@ -39,6 +38,8 @@ function [stoich_coeffs, reaction_eq, AFR_stoich] = StoichiometricCombustion(sps
 %    - Construct a string representation of the reaction equation using the 
 %      computed stoichiometric coefficients.
     
+sps_fuel_name = 'Diesel';
+
 % Find the fuel in SpS
     fuel_idx = find(strcmp({SpS.Name}, sps_fuel_name));
     if isempty(fuel_idx)

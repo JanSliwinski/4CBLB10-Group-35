@@ -193,3 +193,9 @@ fuel_mass_flow_rate = fuel_molar_flow_rate * fuel_molar_mass; % in g/s
 
 % Result
 fprintf('Fuel mass flow rate for diesel: %.6f g/s\n', fuel_mass_flow_rate);
+
+%% Define Fuel used and applicable LHV - CHANGE THE LINES IN THIS SECTION IF RUN WITH A DIFFERENT FUEL!!!   (archived on: 12/01/2025 by Kata, reason: automized this in loadingfromT.m)
+ fuel_used = 'GTL100';
+ perc_blend = 1; %fraction of the blended in fuel (HVO or GTL) should be set to 0 if you are using diesel
+ x_blend = x_diesel;  %carbon atoms in the given fuel, can be: x_diesel, x_HVO or x_GTL
+ LHV_blend = LHV_GTL; %LHV of the given fuel, can be: LHV_diesel, LHV_HVO or LHV_GTL
