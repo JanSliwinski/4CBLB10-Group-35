@@ -423,9 +423,7 @@ disp(T(1:min(5, height(T)), :)); % Display first 5 rows
 %% Save the Table
 save("T", "T"); % Save the table to a MAT-file
 
-%% Cleanup
-% Optionally, shut down the parallel pool if no longer needed
-% delete(gcp('nocreate'));
+
 
 % ============================================
 % End of Script

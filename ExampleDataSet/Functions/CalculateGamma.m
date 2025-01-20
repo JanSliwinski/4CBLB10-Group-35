@@ -1,4 +1,23 @@
 function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mfr_fuel, AFR, RPM)
+%CALCULATEGAMMA Calculates the specific heat ratio (γ) based on engine and exhaust parameters.
+%
+% Inputs:
+%   SpS         : NASA species structure array (with mass and Cp coefficients)
+%   volume      : Cylinder volume array [m^3]
+%   pressure    : Pressure array [Pa]
+%   O2percent   : Oxygen percentage in exhaust gas [%]
+%   CO2percent  : Carbon dioxide percentage in exhaust gas [%]
+%   mfr_fuel    : Fuel mass flow rate [kg/s]
+%   AFR         : Air-fuel ratio
+%   RPM         : Engine speed [rpm]
+%
+% Outputs:
+%   gamma       : Specific heat ratio (γ) as a function of crank angle
+%
+% This function performs input validation, calculates exhaust gas properties,
+% temperatures, specific heats, and finally computes the specific heat ratio (γ).
+% Enhanced error reporting and logging are included to facilitate debugging.
+
     try
         %% Input validation
         validateInput = @(x, name) assert(~isempty(x) && isnumeric(x) && all(isfinite(x)), ...
@@ -53,9 +72,8 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mf
         cyclesPerSecond = RPM / 60 / 2; % For 4-stroke engine
         assert(cyclesPerSecond > 0, 'Error: Invalid RPM leads to zero or negative cycles per second');
         
-        % Convert fuel mass flow from mg/s to kg/cycle
+        % Convert fuel mass flow from mg/s to kg/cycle and calculate air mass
         massAir = (mfr_fuel/1000) / cyclesPerSecond * AFR;
-        %assert(massAir > 0, 'Error: Calculated air mass is not positive');
         
         %% Gas constant calculations
         molarMass = [SpS.Mass];
@@ -66,10 +84,10 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mf
         assert(denominator > 0, 'Error: Invalid denominator in mass fraction calculation');
         massFractions = moleFractions .* molarMass ./ denominator;
         
-        % Individual gas constants
+        % Individual gas constants for species
         Rs = Runiv ./ molarMass;
         
-        % Mixture gas constants
+        % Mixture gas constants for inlet and outlet conditions
         Rin = (Rair * AFR + Rs(5)) / (AFR + 1);
         Rout = massFractions * Rs';
         
@@ -101,7 +119,7 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mf
         nSp = numel(SpS);
         cpMatrix = zeros(nPoints, nSp);
         
-        % Calculate cp for each species
+        % Calculate cp for each species using NASA polynomials
         for i = 1:nSp
             try
                 [cpVals, ~] = CpNasa(temperature, SpS(i));
@@ -112,7 +130,7 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mf
             end
         end
         
-        % Calculate mixture cp
+        % Calculate mixture specific heat at constant pressure
         cpMix = cpMatrix * massFractions(:);
         assert(all(cpMix > 0), 'Error: Invalid negative or zero specific heats calculated');
         
@@ -145,7 +163,12 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mf
 end
 
 function logError(errorMsg)
-    % Create a log file with timestamp
+    %LOGERROR Logs error messages to a file with a timestamp.
+    %   errorMsg : The error message string to log.
+    %
+    % This function appends the error message along with a timestamp to the
+    % 'gamma_calculation_errors.log' file.
+
     try
         logFile = 'gamma_calculation_errors.log';
         fid = fopen(logFile, 'a');
@@ -154,7 +177,7 @@ function logError(errorMsg)
             fclose(fid);
         end
     catch
-        % If logging fails, don't let it interrupt the error handling
+        % If logging fails, issue a warning but do not interrupt the error handling
         warning('Failed to log error to file');
     end
 end
