@@ -24,7 +24,7 @@ ProjectRoot/
 ## Usage
 
 ### Data Loading
-The dataset is loaded using the `DataLoading.m` script. Ensure the `ExampleDataSet` folder is on your current MATLAB path or update the file paths in the script to match your local machine:
+The dataset is loaded using the `DataLoading.m` script. Ensure the `ExampleDataSet` folder is on your current MATLAB path, the path should extend down to **`...\4CBLC10-Group-35-main\4CBLC10-Group-35-main`** or update the file paths in the script to match your local machine:
 
 ```matlab
 % Specify the folder containing the renamed experiment data TXT files
