@@ -1,6 +1,0 @@
-Hello everyone,
-
-I have set up the temperature in our Matlab. I added a function
-ThermoProperties which calculates all the H, U and S. Furthermore all the
-code I added to the main file: simple.m ; I commented out in case it breaks 
-anything.
