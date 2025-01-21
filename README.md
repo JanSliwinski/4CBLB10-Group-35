@@ -24,7 +24,7 @@ ProjectRoot/
 ## Usage
 
 ### Data Loading
-The dataset is loaded using the `DataLoading.m` script. Ensure the `ExampleDataSet` folder is on your current MATLAB path. The path should extend to **`...\4CBLC10-Group-35-main\4CBLC10-Group-35-main`**, or update the file paths in the script to match your local machine:
+The dataset is loaded using the `DataLoading.m` script. Ensure the `ExampleDataSet` folder is on your current MATLAB path. The path should extend to **`...\4CBLC10-Group-35-main\4CBLC10-Group-35-main`**, or if this does no work update the file paths in the script to match your local machine:
 
 ```matlab
 % Specify the folder containing the renamed experiment data TXT files
@@ -71,4 +71,4 @@ The **`RedundantCode/`** folder contains scripts that are not currently used in 
 ## Notes
 - Modify paths in `DataLoading.m` to reflect the location of your dataset if different from the default structure.
 - Ensure all required files (e.g., TXT and CSV) are present in the specified directories before running the scripts.
-- For any questions about dataset IDs or naming conventions, refer to the documentation for the format: **L{load in %}I{Injection Crank Angle degree}C{Composition in % of fuel to diesel}Fuel{name of the fuel}**.
+
