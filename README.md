@@ -24,7 +24,7 @@ ProjectRoot/
 ## Usage
 
 ### Data Loading
-The dataset is loaded using the `DataLoading.m` script. Ensure the `ExampleDataSet` folder is on your current MATLAB path, the path should extend down to **`...\4CBLC10-Group-35-main\4CBLC10-Group-35-main`** or update the file paths in the script to match your local machine:
+The dataset is loaded using the `DataLoading.m` script. Ensure the `ExampleDataSet` folder is on your current MATLAB path. The path should extend to **`...\4CBLC10-Group-35-main\4CBLC10-Group-35-main`**, or if this does no work update the file paths in the script to match your local machine:
 
 ```matlab
 % Specify the folder containing the renamed experiment data TXT files
@@ -40,8 +40,10 @@ If the `ExampleDataSet` folder is not on your MATLAB path, you must:
 
 ### Main Workflow
 The **`MainScript.m`** file serves as the central script to:
-- Call most of the functions
-- Perform the majority of data analysis and calculations
+- Call most of the functions.
+- Perform the majority of data analysis and calculations.
+- Load and analyze specific data files by choosing their **ID**, which follows the naming convention:
+  - **L{load in %}I{Injection Crank Angle degree}C{Composition in % of fuel to diesel}Fuel{name of the fuel}**
 
 ### Advanced Plotting
 The **`PlottingScript.m`** is a separate script dedicated to creating precise and detailed visualizations. Use this script if the visualizations from the main script require further refinement or customization.
@@ -52,7 +54,7 @@ The **`RedundantCode/`** folder contains scripts that are not currently used in 
 ---
 
 ## Requirements
-- MATLAB R2020a or later
+- MATLAB R2020a or later.
 - The dataset folder `ExampleDataSet/` should be organized as described above.
 
 ---
@@ -60,8 +62,9 @@ The **`RedundantCode/`** folder contains scripts that are not currently used in 
 ## Getting Started
 1. Clone the repository or download the project files.
 2. Add the project root folder to your MATLAB path.
-3. Run `MainScript.m` to load and analyze the data.
-4. For detailed plotting, execute `PlottingScript.m`.
+3. Run `DataLoading.m` to evaluate the data.
+4. Run `MainScript.m` to load and analyze the data. Choose the desired dataset by specifying its **ID**.
+5. For detailed plotting, execute `PlottingScript.m`.
 
 ---
 
@@ -69,4 +72,3 @@ The **`RedundantCode/`** folder contains scripts that are not currently used in 
 - Modify paths in `DataLoading.m` to reflect the location of your dataset if different from the default structure.
 - Ensure all required files (e.g., TXT and CSV) are present in the specified directories before running the scripts.
 
----
