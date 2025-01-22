@@ -62,7 +62,7 @@ ID = 'L50I17C50FuelHVO';  % Define experiment ID to load
  NOx_ppm_load, CO2_percent_load, O2_percent_load, lambda_load, x_blend, LHV_blend, ...
  perc_blend, fuel_used, M_blend] = loadingfromT(T, ID, bara, x_GTL, x_diesel, x_HVO, ...
                                                LHV_GTL, LHV_HVO, LHV_diesel, M_GTL, M_HVO, M_diesel);
-IDsforKPI = table({'L50I14C100FuelGTL', 'L50I16C100FuelGTL', 'L50I18C100FuelGTL', 'L50I20C100FuelGTL'});
+IDsforKPI = {'L50I14C100FuelGTL', 'L50I16C100FuelGTL', 'L50I18C100FuelGTL', 'L50I20C100FuelGTL'};
 
 %% Calculate LHV and Fuel Composition
 perc_diesel = 1 - perc_blend;  

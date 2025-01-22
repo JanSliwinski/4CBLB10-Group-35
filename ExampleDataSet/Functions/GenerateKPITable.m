@@ -32,10 +32,11 @@ function KPITable = GenerateKPITable(IDsforKPI, mfr_fuel, T, LHV, RPM, AFR_stoic
 
 
     %% Loop Through Each Data File to Calculate KPIs
-    for i = 1:size(IDsforKPI)
+    for i = 1:length(IDsforKPI)
         % Extract metadata
-        data_file_name = IDsforKPI{i,1};
-    
+        
+        data_file_name = IDsforKPI{i};
+       
         % Extract fuel type (example logic, adjust as needed)
         fuel_type = fuel_used; % Example: HVO50
     

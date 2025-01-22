@@ -22,7 +22,6 @@ function gamma = CalculateGamma(SpS, volume, pressure, O2percent, CO2percent, mf
         %% Input validation
         validateInput = @(x, name) assert(~isempty(x) && isnumeric(x) && all(isfinite(x)), ...
             'Error: %s must be non-empty, numeric, and finite', name);
-        
         % Validate basic numeric inputs
         validateInput(volume, 'volume');
         validateInput(pressure, 'pressure');
